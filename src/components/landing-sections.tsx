@@ -5,14 +5,14 @@ export function Hero() {
   return (
     <section id="top" className="relative isolate min-h-[100svh] overflow-hidden bg-ink text-foam">
       <Image
-        src="/images/hero.png"
+        src="/images/cafe-hero.png"
         alt="Aureum espresso bar at first light"
         fill
         priority
         className="object-cover object-center"
         sizes="100vw"
       />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,14,10,0.35)_0%,rgba(20,14,10,0.28)_40%,rgba(20,14,10,0.78)_100%)]" />
+      <div className="absolute inset-0 bg-black/40" />
       <div className="grain absolute inset-0" />
       <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-16 pt-32 sm:px-8 sm:pb-20">
         <p className="text-[11px] uppercase tracking-[0.42em] text-gold">SoHo · Specialty atelier</p>
