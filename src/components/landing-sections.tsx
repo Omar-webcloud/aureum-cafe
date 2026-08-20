@@ -5,7 +5,7 @@ export function Hero() {
   return (
     <section id="top" className="relative isolate min-h-[100svh] overflow-hidden bg-ink text-foam">
       <Image
-        src="/images/hero.jpg"
+        src="/images/hero.png"
         alt="Aureum espresso bar at first light"
         fill
         priority
@@ -63,7 +63,7 @@ export function Story() {
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="relative min-h-[520px] overflow-hidden rounded-[32px]">
           <Image
-            src="/images/barista.jpg"
+            src="/images/barista.png"
             alt="Barista pulling espresso at Aureum"
             fill
             className="object-cover"
@@ -180,7 +180,7 @@ export function Visit({ whatsappNumber }: { whatsappNumber: string }) {
     <section id="visit" className="scroll-mt-24 bg-foam px-5 py-24 sm:px-8">
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-2">
         <div className="relative min-h-[420px] overflow-hidden rounded-[32px]">
-          <Image src="/images/interior.jpg" alt="Aureum dining room" fill className="object-cover" sizes="50vw" />
+          <Image src="/images/interior.png" alt="Aureum dining room" fill className="object-cover" sizes="50vw" />
         </div>
         <div id="order" className="rounded-[32px] bg-ink p-8 text-foam sm:p-12">
           <p className="text-[11px] uppercase tracking-[0.32em] text-gold">Visit</p>
