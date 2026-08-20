@@ -2,7 +2,7 @@ import { count } from "drizzle-orm";
 import { db } from "@/db";
 import { menuItems } from "@/db/schema";
 
-const catalog = [
+export const catalog = [
   {
     slug: "aureum-latte",
     name: "Aureum Latte",
