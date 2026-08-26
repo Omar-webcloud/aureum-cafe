@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, Sparkles, Coffee, Utensils, ChevronDown } from "lucide-react";
 import { useCart } from "./cart-context";
 import { formatUsd } from "@/lib/money";
+import type { MenuItemDTO } from "@/lib/types";
 
 type Message = {
   role: "user" | "assistant";
@@ -19,10 +20,22 @@ export function AiBaristaWidget() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { addItem } = useCart();
+  const { addItem, openCart } = useCart();
   const [activeTab, setActiveTab] = useState<"chat" | "recommend" | "order">("chat");
   const [preferences, setPreferences] = useState<string[]>([]);
   const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [catalog, setCatalog] = useState<MenuItemDTO[]>([]);
+
+  useEffect(() => {
+    fetch("/api/menu")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.items) {
+          setCatalog(data.items);
+        }
+      })
+      .catch((err) => console.error("Error fetching menu for AI Barista:", err));
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -50,14 +63,24 @@ export function AiBaristaWidget() {
         const data = await res.json();
         
         if (data.parsedOrder?.ok && data.parsedOrder.items.length > 0) {
-           let msg = "I've prepared the following for your cart:\n";
-           // Since we don't have full catalog here easily without fetching, we rely on the parser
-           msg += "Added items to cart! Please check your cart.";
-           setMessages(prev => [...prev, { role: "assistant", content: msg, isOrderParse: true }]);
-           // Note: in a real app we'd fetch the product details again to add to cart,
-           // or have the parser return rich item details. Let's keep it simple for now.
+          const addedDetails: string[] = [];
+          data.parsedOrder.items.forEach((item: any) => {
+            const product = catalog.find((p) => p.id === item.productId);
+            if (product) {
+              addItem(product, item.quantity);
+              addedDetails.push(`• ${item.quantity}× ${product.name}`);
+            }
+          });
+
+          if (addedDetails.length > 0) {
+            const msg = `I've added the following to your cart:\n${addedDetails.join("\n")}\n\nI've opened your tray so you can review and place the order!`;
+            setMessages(prev => [...prev, { role: "assistant", content: msg, isOrderParse: true }]);
+            openCart();
+          } else {
+            setMessages(prev => [...prev, { role: "assistant", content: "I parsed your order but couldn't find those items in our active catalog." }]);
+          }
         } else {
-           setMessages(prev => [...prev, { role: "assistant", content: data.parsedOrder?.error || "I couldn't understand that order. Could you rephrase?" }]);
+          setMessages(prev => [...prev, { role: "assistant", content: data.parsedOrder?.error || "I couldn't understand that order. Could you rephrase?" }]);
         }
       } else {
         const chatHistory = messages.map(m => ({ role: m.role, content: m.content }));
