@@ -11,7 +11,7 @@ import type {
 
 export class GeminiProvider implements AIServiceProvider {
   private ai: GoogleGenAI;
-  private defaultModel = "gemini-2.5-flash";
+  private defaultModel = "gemini-3.6-flash";
 
   constructor(apiKey: string) {
     this.ai = new GoogleGenAI({ apiKey });
@@ -149,21 +149,26 @@ Use this data to answer the owner's questions accurately and concisely. Do not m
 Data:
 ${JSON.stringify(toolsData)}
 `;
-    const history = messages.map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
+    const history = messages
+      .filter((m) => m.role !== "system")
+      .map((m) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }));
+
+    // Gemini rejects empty contents — ensure there's at least one user turn
+    const contents = history.length > 0 ? history : [{ role: "user", parts: [{ text: "Hello" }] }];
 
     try {
       const response = await this.ai.models.generateContent({
         model: this.defaultModel,
-        contents: history as any,
+        contents: contents as any,
         config: { systemInstruction },
       });
       return response.text || "I couldn't generate a response.";
-    } catch (error) {
-      console.error("Gemini owner chat error:", error);
-      return "An error occurred while chatting with the owner assistant.";
+    } catch (error: any) {
+      console.error("Gemini owner chat error:", error?.message ?? error);
+      return `An error occurred while chatting with the owner assistant: ${error?.message ?? "Unknown error"}`;
     }
   }
 }
