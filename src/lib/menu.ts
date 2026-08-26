@@ -22,6 +22,14 @@ function toDto(item: typeof menuItems.$inferSelect): MenuItemDTO {
     featured: item.featured,
     available: item.available,
     tag: item.tag,
+    ingredients: item.ingredients,
+    allergens: item.allergens,
+    milkOptions: item.milkOptions,
+    temperatureOptions: item.temperatureOptions,
+    sweetnessLevel: item.sweetnessLevel,
+    coffeeStrength: item.coffeeStrength,
+    isDairyFree: item.isDairyFree || false,
+    isGlutenFree: item.isGlutenFree || false,
   };
 }
 

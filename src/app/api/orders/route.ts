@@ -76,7 +76,7 @@ export async function POST(request: Request) {
 
   const ids = [...new Set(parsed.items.map((item) => item.menuItemId))];
   const catalog = await db.select().from(menuItems).where(inArray(menuItems.id, ids));
-  const byId = new Map(catalog.map((item) => [item.id, item]));
+  const byId = new Map<number, MenuItem>(catalog.map((item: any) => [item.id, item]));
 
   const lines: Array<{ menuItem: MenuItem; quantity: number }> = [];
   for (const item of parsed.items) {
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
   });
   const whatsappUrl = buildWhatsAppUrl(message);
 
-  const created = await db.transaction(async (tx) => {
+  const created = await db.transaction(async (tx: any) => {
     const [order] = await tx
       .insert(orders)
       .values({
@@ -162,7 +162,7 @@ export async function POST(request: Request) {
 
 export async function GET() {
   const recent = await db.select().from(orders).orderBy(desc(orders.createdAt)).limit(40);
-  const ids = recent.map((order) => order.id);
+  const ids = recent.map((order: any) => order.id);
   const items =
     ids.length === 0
       ? []
@@ -179,7 +179,7 @@ export async function GET() {
     grouped.set(item.orderId, current);
   }
 
-  const payload: KitchenOrder[] = recent.map((order) => ({
+  const payload: KitchenOrder[] = recent.map((order: any) => ({
     id: order.id,
     reference: order.reference,
     customerName: order.customerName,

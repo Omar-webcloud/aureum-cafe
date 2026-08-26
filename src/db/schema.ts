@@ -11,6 +11,23 @@ export const menuItems = pgTable("menu_items", {
   featured: boolean("featured").notNull().default(false),
   available: boolean("available").notNull().default(true),
   tag: text("tag"),
+  ingredients: text("ingredients"), // comma-separated or JSON
+  allergens: text("allergens"),
+  milkOptions: text("milk_options"), // e.g. "Oat, Almond, Whole"
+  temperatureOptions: text("temperature_options"), // e.g. "Hot, Iced"
+  sweetnessLevel: text("sweetness_level"), // e.g. "None, Low, Medium, High"
+  coffeeStrength: text("coffee_strength"), // e.g. "None, Mild, Strong"
+  isDairyFree: boolean("is_dairy_free").default(false),
+  isGlutenFree: boolean("is_gluten_free").default(false),
+});
+
+export const reviews = pgTable("reviews", {
+  id: serial("id").primaryKey(),
+  customerName: text("customer_name").notNull(),
+  rating: integer("rating").notNull(), // 1 to 5
+  comment: text("comment").notNull(),
+  category: varchar("category", { length: 40 }), // e.g. taste, service, price
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const orders = pgTable("orders", {
@@ -42,3 +59,4 @@ export const orderItems = pgTable("order_items", {
 export type MenuItem = typeof menuItems.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
+export type Review = typeof reviews.$inferSelect;

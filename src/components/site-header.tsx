@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { shop } from "@/lib/shop";
 import { useCart } from "@/components/cart-context";
+import Link from "next/link";
 
 const links = [
   { href: "#menu", label: "Menu" },
@@ -41,16 +42,21 @@ export function SiteHeader() {
             </a>
           ))}
         </nav>
-        <button
-          type="button"
-          onClick={openCart}
-          className="flex items-center gap-3 rounded-full border border-foam/20 bg-foam/10 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-foam transition hover:border-gold hover:text-gold"
-        >
-          Order
-          <span className="grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-[10px] text-ink">
-            {count}
-          </span>
-        </button>
+        <div className="flex items-center gap-4">
+          <Link href="/owner" className="hidden sm:inline-flex text-xs font-medium text-amber-500/80 hover:text-amber-400 transition-colors">
+            Owner Portal
+          </Link>
+          <button
+            type="button"
+            onClick={openCart}
+            className="flex items-center gap-3 rounded-full border border-foam/20 bg-foam/10 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-foam transition hover:border-gold hover:text-gold"
+          >
+            Order
+            <span className="grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-[10px] text-ink">
+              {count}
+            </span>
+          </button>
+        </div>
       </div>
     </header>
   );

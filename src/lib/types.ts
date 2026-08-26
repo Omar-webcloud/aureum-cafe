@@ -11,6 +11,14 @@ export type MenuItemDTO = {
   featured: boolean;
   available: boolean;
   tag: string | null;
+  ingredients: string | null;
+  allergens: string | null;
+  milkOptions: string | null;
+  temperatureOptions: string | null;
+  sweetnessLevel: string | null;
+  coffeeStrength: string | null;
+  isDairyFree: boolean;
+  isGlutenFree: boolean;
 };
 
 export type CartLine = {
@@ -62,3 +70,13 @@ export type KitchenOrder = {
     unitPriceCents: number;
   }>;
 };
+
+export type ReviewDTO = {
+  id: number;
+  customerName: string;
+  rating: number;
+  comment: string;
+  category: string | null;
+  createdAt: string;
+};
+

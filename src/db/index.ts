@@ -11,7 +11,7 @@
  *   db.execute(sql`…`)
  */
 
-import { menuItems, orderItems, orders } from "@/db/schema";
+import { menuItems, orderItems, orders, reviews } from "@/db/schema";
 
 /* -------------------------------------------------------------------------- */
 /*  Storage                                                                    */
@@ -321,7 +321,7 @@ function createUpdateChain(table: unknown) {
 /*  Exported fake `db`                                                         */
 /* -------------------------------------------------------------------------- */
 
-export const db = {
+export const db: any = {
   select(fields?: Record<string, unknown>) {
     return createSelectChain(fields);
   },

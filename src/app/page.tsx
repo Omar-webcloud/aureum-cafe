@@ -6,6 +6,8 @@ import { SiteHeader } from "@/components/site-header";
 import { getMenu } from "@/lib/menu";
 import { getWhatsAppNumber } from "@/lib/shop";
 
+import { AiBaristaWidget } from "@/components/ai-barista-widget";
+
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
@@ -27,6 +29,8 @@ export default async function HomePage() {
       <CartDrawer />
       <MobileDock />
       <WhatsAppFab whatsappNumber={whatsappNumber} />
+      <AiBaristaWidget />
     </main>
   );
 }
+

@@ -1,6 +1,6 @@
 import { count } from "drizzle-orm";
 import { db } from "@/db";
-import { menuItems } from "@/db/schema";
+import { menuItems, reviews } from "@/db/schema";
 
 export const catalog = [
   {
@@ -13,6 +13,14 @@ export const catalog = [
     featured: true,
     available: true,
     tag: "Signature",
+    ingredients: "Espresso, Whole Milk",
+    allergens: "Dairy",
+    milkOptions: "Whole, Oat, Almond",
+    temperatureOptions: "Hot, Iced",
+    sweetnessLevel: "Low",
+    coffeeStrength: "Medium",
+    isDairyFree: false,
+    isGlutenFree: true,
   },
   {
     slug: "single-origin-espresso",
@@ -24,6 +32,14 @@ export const catalog = [
     featured: true,
     available: true,
     tag: "House",
+    ingredients: "Espresso",
+    allergens: "None",
+    milkOptions: "None",
+    temperatureOptions: "Hot",
+    sweetnessLevel: "None",
+    coffeeStrength: "Strong",
+    isDairyFree: true,
+    isGlutenFree: true,
   },
   {
     slug: "flat-white",
@@ -35,6 +51,14 @@ export const catalog = [
     featured: false,
     available: true,
     tag: null,
+    ingredients: "Ristretto Espresso, Whole Milk",
+    allergens: "Dairy",
+    milkOptions: "Whole, Oat, Almond",
+    temperatureOptions: "Hot, Iced",
+    sweetnessLevel: "None",
+    coffeeStrength: "Strong",
+    isDairyFree: false,
+    isGlutenFree: true,
   },
   {
     slug: "dark-mocha",
@@ -46,6 +70,14 @@ export const catalog = [
     featured: false,
     available: true,
     tag: null,
+    ingredients: "Espresso, 70% Dark Chocolate, Whole Milk",
+    allergens: "Dairy",
+    milkOptions: "Whole, Oat, Almond",
+    temperatureOptions: "Hot, Iced",
+    sweetnessLevel: "Medium",
+    coffeeStrength: "Medium",
+    isDairyFree: false,
+    isGlutenFree: true,
   },
   {
     slug: "yirgacheffe-pourover",
@@ -57,6 +89,14 @@ export const catalog = [
     featured: true,
     available: true,
     tag: "Origin",
+    ingredients: "Ethiopian Yirgacheffe Coffee Beans, Water",
+    allergens: "None",
+    milkOptions: "None",
+    temperatureOptions: "Hot",
+    sweetnessLevel: "None",
+    coffeeStrength: "Mild",
+    isDairyFree: true,
+    isGlutenFree: true,
   },
   {
     slug: "house-cold-brew",
@@ -68,6 +108,14 @@ export const catalog = [
     featured: true,
     available: true,
     tag: "All day",
+    ingredients: "House Blend Coffee Beans, Filtered Water",
+    allergens: "None",
+    milkOptions: "Whole, Oat, Almond",
+    temperatureOptions: "Iced",
+    sweetnessLevel: "None",
+    coffeeStrength: "Strong",
+    isDairyFree: true,
+    isGlutenFree: true,
   },
   {
     slug: "tasting-flight",
@@ -79,6 +127,14 @@ export const catalog = [
     featured: false,
     available: true,
     tag: "For two",
+    ingredients: "Various Coffee Beans, Water",
+    allergens: "None",
+    milkOptions: "None",
+    temperatureOptions: "Hot, Iced",
+    sweetnessLevel: "None",
+    coffeeStrength: "Various",
+    isDairyFree: true,
+    isGlutenFree: true,
   },
   {
     slug: "ceremonial-matcha",
@@ -90,6 +146,14 @@ export const catalog = [
     featured: false,
     available: true,
     tag: "Seasonal",
+    ingredients: "Ceremonial Uji Matcha, Water, Optional Milk",
+    allergens: "None",
+    milkOptions: "Whole, Oat, Almond",
+    temperatureOptions: "Hot, Iced",
+    sweetnessLevel: "Low",
+    coffeeStrength: "None",
+    isDairyFree: true,
+    isGlutenFree: true,
   },
   {
     slug: "affogato",
@@ -101,6 +165,14 @@ export const catalog = [
     featured: false,
     available: true,
     tag: "Dessert",
+    ingredients: "Espresso, Madagascar Vanilla Gelato",
+    allergens: "Dairy",
+    milkOptions: "None",
+    temperatureOptions: "Hot and Cold",
+    sweetnessLevel: "High",
+    coffeeStrength: "Strong",
+    isDairyFree: false,
+    isGlutenFree: true,
   },
   {
     slug: "butter-croissant",
@@ -112,6 +184,14 @@ export const catalog = [
     featured: false,
     available: true,
     tag: "Baked at 6am",
+    ingredients: "Wheat Flour, Butter, Yeast, Salt, Sugar",
+    allergens: "Dairy, Wheat, Gluten",
+    milkOptions: "None",
+    temperatureOptions: "None",
+    sweetnessLevel: "Low",
+    coffeeStrength: "None",
+    isDairyFree: false,
+    isGlutenFree: false,
   },
   {
     slug: "chocolate-morning-bun",
@@ -123,6 +203,14 @@ export const catalog = [
     featured: false,
     available: true,
     tag: null,
+    ingredients: "Wheat Flour, Butter, Dark Chocolate, Orange Zest, Sugar, Yeast",
+    allergens: "Dairy, Wheat, Gluten",
+    milkOptions: "None",
+    temperatureOptions: "None",
+    sweetnessLevel: "Medium",
+    coffeeStrength: "None",
+    isDairyFree: false,
+    isGlutenFree: false,
   },
   {
     slug: "corner-table-set",
@@ -134,14 +222,70 @@ export const catalog = [
     featured: false,
     available: true,
     tag: "Set",
+    ingredients: "Aureum Latte, Butter Croissant, Water",
+    allergens: "Dairy, Wheat, Gluten",
+    milkOptions: "Whole, Oat, Almond",
+    temperatureOptions: "Hot, Iced",
+    sweetnessLevel: "Low",
+    coffeeStrength: "Medium",
+    isDairyFree: false,
+    isGlutenFree: false,
+  },
+];
+
+const seedReviews = [
+  {
+    customerName: "Alice W.",
+    rating: 5,
+    comment: "The Aureum Latte is incredible. Silky and perfect temperature.",
+    category: "taste",
+  },
+  {
+    customerName: "Mark T.",
+    rating: 4,
+    comment: "Great quality beans, but the cold brew was a little too strong for me.",
+    category: "quality",
+  },
+  {
+    customerName: "Sarah J.",
+    rating: 5,
+    comment: "Barista was super friendly and helped me pick the right matcha.",
+    category: "service",
+  },
+  {
+    customerName: "David L.",
+    rating: 3,
+    comment: "A bit pricey for a daily coffee, but good for a treat.",
+    category: "price",
+  },
+  {
+    customerName: "Emily R.",
+    rating: 4,
+    comment: "Waited 15 minutes for a pour-over. Worth it, but keep it in mind if you're in a rush.",
+    category: "waiting_time",
+  },
+  {
+    customerName: "John D.",
+    rating: 5,
+    comment: "Impeccably clean space. Loved sitting by the window.",
+    category: "cleanliness",
+  },
+  {
+    customerName: "Michael B.",
+    rating: 5,
+    comment: "Best croissant I've had outside of Paris.",
+    category: "taste",
   },
 ];
 
 export async function ensureMenuSeeded() {
-  const [existing] = await db.select({ value: count() }).from(menuItems);
-  if ((existing?.value ?? 0) > 0) {
-    return;
+  const [existingItems] = await db.select({ value: count() }).from(menuItems);
+  if ((existingItems?.value ?? 0) === 0) {
+    await db.insert(menuItems).values(catalog);
   }
 
-  await db.insert(menuItems).values(catalog);
+  const [existingReviews] = await db.select({ value: count() }).from(reviews);
+  if ((existingReviews?.value ?? 0) === 0) {
+    await db.insert(reviews).values(seedReviews);
+  }
 }
