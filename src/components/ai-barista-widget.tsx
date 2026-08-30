@@ -139,14 +139,14 @@ export function AiBaristaWidget() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-24 right-6 z-40 bg-zinc-900 text-amber-500 p-4 rounded-full shadow-2xl border border-amber-500/20 hover:scale-105 transition-all flex items-center gap-2 ${isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`fixed bottom-24 left-5 md:bottom-5 z-40 bg-zinc-900 text-amber-500 p-4 rounded-full shadow-2xl border border-amber-500/20 hover:scale-105 transition-all flex items-center gap-2 ${isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         <Sparkles size={20} />
         <span className="font-medium tracking-wide">Ask AI Barista</span>
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-full max-w-sm sm:max-w-md h-[600px] max-h-[80vh] bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden transform transition-all duration-300 ease-out">
+        <div className="fixed bottom-24 left-4 w-[calc(100%-2rem)] md:bottom-5 md:left-5 md:w-full max-w-sm sm:max-w-md h-[600px] max-h-[calc(100dvh-8rem)] md:max-h-[80vh] bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden transform transition-all duration-300 ease-out">
           <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/30">
