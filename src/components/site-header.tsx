@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { shop } from "@/lib/shop";
 import { useCart } from "@/components/cart-context";
 import Link from "next/link";
+import { User, ShoppingCart } from "lucide-react";
 
 const links = [
   { href: "#menu", label: "Menu" },
@@ -43,15 +44,17 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-4">
-          <Link href="/owner" className="hidden sm:inline-flex text-xs font-medium text-amber-500/80 hover:text-amber-400 transition-colors">
-            Owner Portal
+          <Link href="/owner" className="text-amber-500/80 hover:text-amber-400 transition-colors flex items-center gap-2">
+            <User className="h-5 w-5 sm:hidden" />
+            <span className="hidden sm:inline-flex text-xs font-medium">Owner Portal</span>
           </Link>
           <button
             type="button"
             onClick={openCart}
-            className="flex items-center gap-3 rounded-full border border-foam/20 bg-foam/10 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-foam transition hover:border-gold hover:text-gold"
+            className="flex items-center gap-2 sm:gap-3 rounded-full border border-foam/20 bg-foam/10 p-2 sm:px-4 sm:py-2 text-[11px] uppercase tracking-[0.22em] text-foam transition hover:border-gold hover:text-gold"
           >
-            Order
+            <ShoppingCart className="h-4 w-4 sm:hidden" />
+            <span className="hidden sm:inline">Order</span>
             <span className="grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-[10px] text-ink">
               {count}
             </span>

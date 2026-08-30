@@ -1,5 +1,5 @@
 /**
- * In-memory fake database that mimics the Drizzle ORM query-builder API
+ * In-memory fake database that mimics the Drizzle ORM query-builder API (Trigger HMR)
  * surface used by this app. No PostgreSQL connection required.
  *
  * Supported chains:

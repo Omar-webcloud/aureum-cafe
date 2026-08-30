@@ -107,8 +107,8 @@ export function FullMenu({ items }: { items: MenuItemDTO[] }) {
 
         <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {visible.map((item) => (
-            <article key={item.id} className="overflow-hidden rounded-[28px] bg-white shadow-[0_18px_50px_rgba(20,14,10,0.06)]">
-              <div className="relative h-56">
+            <article key={item.id} className="flex flex-col h-full overflow-hidden rounded-[28px] bg-white shadow-[0_18px_50px_rgba(20,14,10,0.06)]">
+              <div className="relative h-56 shrink-0">
                 <Image src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="400px" />
                 {item.tag ? (
                   <span className="absolute left-4 top-4 rounded-full bg-ink/80 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-gold">
@@ -116,16 +116,16 @@ export function FullMenu({ items }: { items: MenuItemDTO[] }) {
                   </span>
                 ) : null}
               </div>
-              <div className="space-y-4 p-6">
-                <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col flex-1 p-6">
+                <div className="flex items-start justify-between gap-4 mb-4">
                   <h3 className="font-display text-3xl leading-none">{item.name}</h3>
-                  <p className="text-sm text-gold-deep">{formatUsd(item.priceCents)}</p>
+                  <p className="shrink-0 text-sm text-gold-deep">{formatUsd(item.priceCents)}</p>
                 </div>
-                <p className="text-sm leading-6 text-ink/65">{item.description}</p>
+                <p className="text-sm leading-6 text-ink/65 mb-6">{item.description}</p>
                 <button
                   type="button"
                   onClick={() => addItem(item)}
-                  className="h-11 w-full rounded-full border border-ink/10 text-[11px] uppercase tracking-[0.22em] transition hover:border-gold hover:bg-ink hover:text-foam"
+                  className="mt-auto h-11 w-full shrink-0 rounded-full border border-ink/10 text-[11px] uppercase tracking-[0.22em] transition hover:border-gold hover:bg-ink hover:text-foam"
                 >
                   Add to tray
                 </button>
