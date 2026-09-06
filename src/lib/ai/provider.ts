@@ -123,7 +123,7 @@ Choose exactly one of these shapes:
 
 export class GeminiProvider implements AIServiceProvider {
   private ai: GoogleGenAI;
-  private defaultModel = "gemini-2.5-flash";
+  private defaultModel = "gemini-3.6-flash";
 
   constructor(apiKey: string) {
     this.ai = new GoogleGenAI({ apiKey });
