@@ -382,6 +382,8 @@ Add these in **Vercel → Project → Settings → Environment Variables**:
 | Variable | Required | Description |
 |---|---|---|
 | `GEMINI_API_KEY` | ✅ Yes | Google AI Studio key. Powers all AI features. Get one at [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+| `GROQ_API_KEY` | ⚠️ Recommended | Groq API key. Used as the AI Barista fallback when Gemini is unavailable. |
+| `GROQ_MODEL` | ⚠️ Optional | Groq model name. Defaults to `openai/gpt-oss-120b`. |
 | `WHATSAPP_NUMBER` | ⚠️ Optional | The bar's WhatsApp number (digits only, e.g. `14155550188`). Falls back to the demo number. |
 | `WHATSAPP_TOKEN` | ⚠️ Optional | WhatsApp Cloud API access token. Required to send orders server-side via the API. |
 | `WHATSAPP_PHONE_NUMBER_ID` | ⚠️ Optional | WhatsApp Cloud API phone number ID. Required alongside `WHATSAPP_TOKEN`. |

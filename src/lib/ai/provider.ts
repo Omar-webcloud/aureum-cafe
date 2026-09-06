@@ -336,6 +336,150 @@ ${JSON.stringify(toolsData)}
   }
 }
 
+// ─── Groq Provider ──────────────────────────────────────────────────────────
+
+export class GroqProvider implements AIServiceProvider {
+  private apiKey: string;
+  private model = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
+  }
+
+  private async complete(messages: { role: "system" | "user" | "assistant"; content: string }[], json = false): Promise<string> {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: this.model,
+        messages,
+        temperature: 0.2,
+        ...(json ? { response_format: { type: "json_object" } } : {}),
+      }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`Groq request failed with status ${response.status}: ${errorBody}`);
+    }
+
+    const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+    return data.choices?.[0]?.message?.content?.trim() || "";
+  }
+
+  async chat(messages: BaristaMessage[], whatsappNumber = "14155550188"): Promise<string> {
+    const catalog = messages.find((message) => message.role === "system")?.content ?? "";
+    const history = messages
+      .filter((message) => message.role !== "system")
+      .map((message) => ({ role: message.role, content: message.content }));
+    const raw = await this.complete([
+      { role: "system", content: buildSystemPrompt(catalog, whatsappNumber) },
+      ...(history.length > 0 ? history : [{ role: "user" as const, content: "Hello" }]),
+    ], true);
+
+    try {
+      JSON.parse(raw);
+      return raw;
+    } catch {
+      return JSON.stringify({ type: "text", content: raw || "I'm having trouble thinking right now." });
+    }
+  }
+
+  async parseNaturalLanguageOrder(text: string, catalog: MenuItemDTO[]): Promise<ParsedOrder> {
+    const raw = await this.complete([
+      {
+        role: "system",
+        content: `You are an AI Barista order parser. Return ONLY a JSON object with this shape: {"ok": boolean, "items": [{"productId": number, "quantity": number, "customizations": {"milk": string, "temperature": string, "sweetness": string}}], "error": string}. Match requests to this catalog and set ok false if no menu item matches: ${JSON.stringify(catalog, ["id", "name", "category", "milkOptions", "temperatureOptions"])}`,
+      },
+      { role: "user", content: text },
+    ], true);
+    return JSON.parse(raw) as ParsedOrder;
+  }
+
+  async recommendProducts(preferences: string[], catalog: MenuItemDTO[]): Promise<RecommendationResult[]> {
+    const raw = await this.complete([
+      {
+        role: "system",
+        content: `You are an AI Barista recommender. Return ONLY a JSON object with a "recommendations" array containing 2-3 objects shaped {"productId": number, "explanation": string}. Catalog: ${JSON.stringify(catalog, ["id", "name", "category", "temperatureOptions", "sweetnessLevel", "coffeeStrength", "isDairyFree"])}. Preferences: ${preferences.join(", ")}`,
+      },
+      { role: "user", content: "Recommend products based on my preferences." },
+    ], true);
+    const result = JSON.parse(raw) as { recommendations?: RecommendationResult[] };
+    return result.recommendations ?? [];
+  }
+
+  async generateBusinessInsights(): Promise<OwnerInsight[]> {
+    return [];
+  }
+
+  async analyzeReviews(): Promise<ReviewSentimentSummary> {
+    return { positivePercentage: 0, mostPraised: "N/A", mostComplained: "N/A", sampleQuotes: [] };
+  }
+
+  async ownerAssistantChat(): Promise<string> {
+    return "The AI Owner Assistant is currently unavailable.";
+  }
+}
+
+// Keep owner features on Gemini while allowing barista requests to fail over.
+export class BaristaFallbackProvider implements AIServiceProvider {
+  constructor(private primary: AIServiceProvider, private fallback: AIServiceProvider) {}
+
+  async chat(messages: BaristaMessage[], whatsappNumber?: string): Promise<string> {
+    let reply: string;
+    try {
+      reply = await this.primary.chat(messages, whatsappNumber);
+    } catch (error) {
+      console.error("Primary AI barista chat failed; switching to Groq:", error);
+      try {
+        return await this.fallback.chat(messages, whatsappNumber);
+      } catch (fallbackError) {
+        console.error("Groq AI barista chat failed:", fallbackError);
+        return JSON.stringify({ type: "text", content: "I'm temporarily offline. Please try that question again in a moment." });
+      }
+    }
+    try {
+      const parsed = JSON.parse(reply) as { content?: string };
+      if (!parsed.content?.includes("temporarily offline")) return reply;
+    } catch {
+      return reply;
+    }
+    try {
+      return await this.fallback.chat(messages, whatsappNumber);
+    } catch (error) {
+      console.error("Groq AI barista chat failed:", error);
+      return JSON.stringify({ type: "text", content: "I'm temporarily offline. Please try that question again in a moment." });
+    }
+  }
+
+  async parseNaturalLanguageOrder(text: string, catalog: MenuItemDTO[]): Promise<ParsedOrder> {
+    try {
+      const result = await this.primary.parseNaturalLanguageOrder(text, catalog);
+      return result.ok || !result.error?.startsWith("Failed") ? result : this.fallback.parseNaturalLanguageOrder(text, catalog);
+    } catch (error) {
+      console.error("Primary AI order parsing failed; switching to Groq:", error);
+      return this.fallback.parseNaturalLanguageOrder(text, catalog);
+    }
+  }
+
+  async recommendProducts(preferences: string[], catalog: MenuItemDTO[]): Promise<RecommendationResult[]> {
+    try {
+      const result = await this.primary.recommendProducts(preferences, catalog);
+      return result.length > 0 ? result : this.fallback.recommendProducts(preferences, catalog);
+    } catch (error) {
+      console.error("Primary AI recommendations failed; switching to Groq:", error);
+      return this.fallback.recommendProducts(preferences, catalog);
+    }
+  }
+
+  generateBusinessInsights(ordersData: any[], catalog: MenuItemDTO[]) { return this.primary.generateBusinessInsights(ordersData, catalog); }
+  analyzeReviews(reviewsData: any[]) { return this.primary.analyzeReviews(reviewsData); }
+  ownerAssistantChat(messages: BaristaMessage[], toolsData: any) { return this.primary.ownerAssistantChat(messages, toolsData); }
+}
+
 // ─── Fallback Provider ────────────────────────────────────────────────────────
 
 export class FallbackProvider implements AIServiceProvider {
@@ -385,11 +529,19 @@ export class FallbackProvider implements AIServiceProvider {
 
 export function getAIProvider(): AIServiceProvider {
   const geminiKey = process.env.GEMINI_API_KEY;
+  const groqKey = process.env.GROQ_API_KEY;
+
+  if (geminiKey && groqKey) {
+    return new BaristaFallbackProvider(new GeminiProvider(geminiKey), new GroqProvider(groqKey));
+  }
+
   if (geminiKey) {
     return new GeminiProvider(geminiKey);
   }
 
-  // Note: Could add GroqProvider here in the future
+  if (groqKey) {
+    return new GroqProvider(groqKey);
+  }
 
   return new FallbackProvider();
 }

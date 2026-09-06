@@ -73,7 +73,7 @@ export function AiBaristaWidget() {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [catalog, setCatalog] = useState<MenuItemDTO[]>([]);
   const widgetRef = useRef<HTMLDivElement>(null);
-  const dragState = useRef({ offsetX: 0, offsetY: 0, width: 56, height: 56, moved: false });
+  const dragState = useRef({ offsetX: 0, offsetY: 0, startX: 0, startY: 0, width: 56, height: 56, moved: false });
   const suppressClick = useRef(false);
 
   // Load catalog for recommend/order tabs
@@ -122,7 +122,8 @@ export function AiBaristaWidget() {
       const nextX = Math.max(8, Math.min(window.innerWidth - drag.width - 8, event.clientX - drag.offsetX));
       const nextY = Math.max(8, Math.min(window.innerHeight - drag.height - 8, event.clientY - drag.offsetY));
 
-      if (Math.abs(event.movementX) > 0 || Math.abs(event.movementY) > 0) {
+      const distanceMoved = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+      if (distanceMoved > 6) {
         drag.moved = true;
       }
       setFloatingPosition({ x: nextX, y: nextY });
@@ -314,6 +315,8 @@ export function AiBaristaWidget() {
           dragState.current = {
             offsetX: event.clientX - rect.left,
             offsetY: event.clientY - rect.top,
+            startX: event.clientX,
+            startY: event.clientY,
             width: rect.width,
             height: rect.height,
             moved: false,
