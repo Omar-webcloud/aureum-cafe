@@ -1,9 +1,9 @@
 // In-memory simple rate limiter for API routes
 const ipRequestCounts = new Map<string, { count: number; timestamp: number }>();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 10;
+const DEFAULT_MAX_REQUESTS_PER_WINDOW = 10;
 
-export function checkRateLimit(ip: string): boolean {
+export function checkRateLimit(ip: string, maxRequests = DEFAULT_MAX_REQUESTS_PER_WINDOW): boolean {
   const now = Date.now();
   const record = ipRequestCounts.get(ip);
 
@@ -18,7 +18,7 @@ export function checkRateLimit(ip: string): boolean {
     return true;
   }
 
-  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+  if (record.count >= maxRequests) {
     return false;
   }
 

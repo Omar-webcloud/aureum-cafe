@@ -145,6 +145,10 @@ export function AiBaristaWidget() {
         });
         const data = await res.json();
 
+        if (!res.ok) {
+          throw new Error(data.error || "The order service is temporarily unavailable.");
+        }
+
         if (data.parsedOrder?.ok && data.parsedOrder.items.length > 0) {
           const addedDetails: string[] = [];
           data.parsedOrder.items.forEach((item: any) => {
@@ -178,6 +182,10 @@ export function AiBaristaWidget() {
           body: JSON.stringify({ action: "chat", messages: chatHistory }),
         });
         const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "The chat service is temporarily unavailable.");
+        }
 
         if (data.reply) {
           const reply = parseReply(data.reply);

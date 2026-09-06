@@ -123,7 +123,8 @@ Choose exactly one of these shapes:
 
 export class GeminiProvider implements AIServiceProvider {
   private ai: GoogleGenAI;
-  private defaultModel = "gemini-3.6-flash";
+  private defaultModel = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+  private fallbackModel = "gemini-3.6-flash";
 
   constructor(apiKey: string) {
     this.ai = new GoogleGenAI({ apiKey });
@@ -150,15 +151,18 @@ export class GeminiProvider implements AIServiceProvider {
     // Gemini requires at least one user turn
     const contents = history.length > 0 ? history : [{ role: "user", parts: [{ text: "Hello" }] }];
 
-    try {
-      const response = await this.ai.models.generateContent({
-        model: this.defaultModel,
+    const generateChatResponse = (model: string) =>
+      this.ai.models.generateContent({
+        model,
         contents: contents as any,
         config: {
           systemInstruction,
           responseMimeType: "application/json",
         },
       });
+
+    try {
+      const response = await generateChatResponse(this.defaultModel);
 
       const raw = response.text?.trim() ?? "";
       // Validate it parses as JSON — if not, wrap it
@@ -169,8 +173,20 @@ export class GeminiProvider implements AIServiceProvider {
         return JSON.stringify({ type: "text", content: raw || "I'm having trouble thinking right now." });
       }
     } catch (error) {
-      console.error("Gemini chat error:", error);
-      return JSON.stringify({ type: "text", content: "I'm having trouble connecting to my coffee brain right now." });
+      console.error("Gemini chat error; retrying with fallback model:", error);
+
+      if (this.defaultModel !== this.fallbackModel) {
+        try {
+          const response = await generateChatResponse(this.fallbackModel);
+          const raw = response.text?.trim() ?? "";
+          JSON.parse(raw);
+          return raw;
+        } catch (fallbackError) {
+          console.error("Gemini fallback chat error:", fallbackError);
+        }
+      }
+
+      return JSON.stringify({ type: "text", content: "I'm temporarily offline. Please try that question again in a moment." });
     }
   }
 
@@ -293,15 +309,28 @@ ${JSON.stringify(toolsData)}
 
     const contents = history.length > 0 ? history : [{ role: "user", parts: [{ text: "Hello" }] }];
 
-    try {
-      const response = await this.ai.models.generateContent({
-        model: this.defaultModel,
+    const generateOwnerResponse = (model: string) =>
+      this.ai.models.generateContent({
+        model,
         contents: contents as any,
         config: { systemInstruction },
       });
+
+    try {
+      const response = await generateOwnerResponse(this.defaultModel);
       return response.text || "I couldn't generate a response.";
     } catch (error: any) {
       console.error("Gemini owner chat error:", error?.message ?? error);
+
+      if (this.defaultModel !== this.fallbackModel) {
+        try {
+          const response = await generateOwnerResponse(this.fallbackModel);
+          return response.text || "I couldn't generate a response.";
+        } catch (fallbackError: any) {
+          console.error("Gemini owner fallback chat error:", fallbackError?.message ?? fallbackError);
+        }
+      }
+
       return `An error occurred while chatting with the owner assistant: ${error?.message ?? "Unknown error"}`;
     }
   }

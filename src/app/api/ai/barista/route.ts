@@ -8,10 +8,12 @@ import type { BaristaMessage } from "@/lib/ai/types";
 
 export const dynamic = "force-dynamic";
 
+const BARISTA_MAX_REQUESTS_PER_WINDOW = 60;
+
 export async function POST(request: Request) {
   // Simple rate limiting by IP (using x-forwarded-for if behind proxy)
   const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
-  if (!checkRateLimit(ip)) {
+  if (!checkRateLimit(ip, BARISTA_MAX_REQUESTS_PER_WINDOW)) {
     return Response.json({ error: "Too many requests. Please try again in a minute." }, { status: 429 });
   }
 
