@@ -1,5 +1,6 @@
 import { db } from "@/db";
 import { menuItems } from "@/db/schema";
+import { ensureMenuSeeded } from "@/db/seed";
 import { getAIProvider } from "@/lib/ai/provider";
 import { checkRateLimit } from "@/lib/ai/rate-limiter";
 import { getWhatsAppNumber } from "@/lib/shop";
@@ -19,6 +20,9 @@ export async function POST(request: Request) {
     const action = body.action; // "chat", "recommend", "parseOrder"
     const provider = getAIProvider();
     const whatsappNumber = getWhatsAppNumber();
+
+    // Ensure the in-memory DB is seeded before querying (mirrors getMenu())
+    await ensureMenuSeeded();
 
     // Fetch catalog for context (shared across all actions)
     const catalog = await db.select().from(menuItems);
