@@ -55,6 +55,9 @@ function messageTextForReply(reply: BaristaReply): string {
 
 export function AiBaristaWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isIntroExpanded, setIsIntroExpanded] = useState(true);
+  const [floatingPosition, setFloatingPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -69,6 +72,9 @@ export function AiBaristaWidget() {
   const [preferences, setPreferences] = useState<string[]>([]);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [catalog, setCatalog] = useState<MenuItemDTO[]>([]);
+  const widgetRef = useRef<HTMLDivElement>(null);
+  const dragState = useRef({ offsetX: 0, offsetY: 0, width: 56, height: 56, moved: false });
+  const suppressClick = useRef(false);
 
   // Load catalog for recommend/order tabs
   useEffect(() => {
@@ -84,6 +90,56 @@ export function AiBaristaWidget() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, recommendations]);
+
+  useEffect(() => {
+    const collapseIntro = window.setTimeout(() => setIsIntroExpanded(false), 3500);
+    return () => window.clearTimeout(collapseIntro);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const closeOnOutsideTap = (event: PointerEvent) => {
+      if (!widgetRef.current?.contains(event.target as Node)) setIsOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsideTap);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideTap);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const drag = dragState.current;
+      const nextX = Math.max(8, Math.min(window.innerWidth - drag.width - 8, event.clientX - drag.offsetX));
+      const nextY = Math.max(8, Math.min(window.innerHeight - drag.height - 8, event.clientY - drag.offsetY));
+
+      if (Math.abs(event.movementX) > 0 || Math.abs(event.movementY) > 0) {
+        drag.moved = true;
+      }
+      setFloatingPosition({ x: nextX, y: nextY });
+    };
+
+    const handlePointerUp = () => {
+      suppressClick.current = dragState.current.moved;
+      setIsDragging(false);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp, { once: true });
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [isDragging]);
 
   // ─── Action executor ────────────────────────────────────────────────────────
 
@@ -248,19 +304,55 @@ export function AiBaristaWidget() {
   // ─── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <>
+    <div ref={widgetRef} className="contents">
       {/* Trigger button */}
       <button
-        onClick={() => setIsOpen(true)}
-        className={`fixed bottom-24 left-5 md:bottom-5 z-40 bg-zinc-900 text-amber-500 p-4 rounded-full shadow-2xl border border-amber-500/20 hover:scale-105 transition-all flex items-center gap-2 ${isOpen ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+        type="button"
+        onPointerDown={(event) => {
+          if (event.button !== 0) return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          dragState.current = {
+            offsetX: event.clientX - rect.left,
+            offsetY: event.clientY - rect.top,
+            width: rect.width,
+            height: rect.height,
+            moved: false,
+          };
+          setFloatingPosition({ x: rect.left, y: rect.top });
+          setIsDragging(true);
+        }}
+        onClick={() => {
+          if (suppressClick.current) {
+            suppressClick.current = false;
+            return;
+          }
+          setIsIntroExpanded(false);
+          setIsOpen(true);
+        }}
+        aria-label="Open AI Barista"
+        aria-expanded={isOpen}
+        style={floatingPosition ? { left: floatingPosition.x, top: floatingPosition.y } : undefined}
+        className={`fixed z-40 flex h-14 touch-none items-center justify-center gap-2 rounded-full border border-amber-500/20 bg-zinc-900 text-amber-500 shadow-2xl transition-[width,padding,transform,opacity] duration-500 ease-out hover:scale-105 ${floatingPosition ? "cursor-grabbing" : "bottom-24 right-4 cursor-grab md:bottom-5 md:right-5"} sm:w-auto sm:px-4 ${isIntroExpanded ? "w-[148px] px-4" : "w-14 px-0"} ${isOpen ? "pointer-events-none translate-y-2 scale-90 opacity-0" : "translate-y-0 scale-100 opacity-100"}`}
       >
         <Sparkles size={20} />
-        <span className="font-medium tracking-wide">Ask AI Barista</span>
+        <span className={`overflow-hidden whitespace-nowrap font-medium tracking-wide transition-[max-width,opacity] duration-300 ease-out sm:max-w-none sm:opacity-100 ${isIntroExpanded ? "max-w-[100px] opacity-100" : "max-w-0 opacity-0 sm:max-w-none sm:opacity-100"}`}>Ask AI Barista</span>
       </button>
 
       {/* Widget panel */}
-      {isOpen && (
-        <div className="fixed bottom-24 left-4 w-[calc(100%-2rem)] md:bottom-5 md:left-5 md:w-full max-w-sm sm:max-w-md h-[640px] max-h-[calc(100dvh-8rem)] md:max-h-[82vh] bg-zinc-950/97 backdrop-blur-xl border border-zinc-800 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden">
+      <div
+        aria-hidden={!isOpen}
+        style={floatingPosition ? (() => {
+          const panelWidth = Math.min(448, window.innerWidth - 32);
+          const panelHeight = Math.min(640, window.innerHeight - 128);
+          const desiredLeft = floatingPosition.x - panelWidth + 56;
+          const desiredBottom = window.innerHeight - floatingPosition.y + 12;
+          return {
+            left: Math.min(Math.max(16, desiredLeft), window.innerWidth - panelWidth - 16),
+            bottom: Math.min(Math.max(16, desiredBottom), window.innerHeight - panelHeight - 16),
+          };
+        })() : undefined}
+        className={`fixed z-50 flex h-[640px] max-h-[calc(100dvh-8rem)] w-[calc(100%-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/97 shadow-2xl backdrop-blur-xl transition-all duration-300 ease-out ${floatingPosition ? "" : "bottom-24 right-4 md:bottom-5 md:right-5"} md:max-h-[82vh] sm:max-w-md ${isOpen ? "translate-y-0 scale-100 opacity-100" : "pointer-events-none translate-y-3 scale-[0.97] opacity-0"}`}
+      >
 
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
@@ -273,7 +365,7 @@ export function AiBaristaWidget() {
                 <p className="text-amber-500/80 text-xs font-medium tracking-wider uppercase">Full site access</p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-zinc-400 hover:text-white transition-colors">
+            <button type="button" onClick={() => setIsOpen(false)} aria-label="Close AI Barista" className="text-zinc-400 transition-colors hover:text-white">
               <X size={24} />
             </button>
           </div>
@@ -479,7 +571,6 @@ export function AiBaristaWidget() {
             </div>
           )}
         </div>
-      )}
-    </>
+    </div>
   );
 }

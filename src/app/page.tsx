@@ -1,6 +1,6 @@
 import { CartDrawer } from "@/components/cart-drawer";
 import { FeaturedMenu, FullMenu } from "@/components/menu-board";
-import { Hero, OriginMarquee, Ritual, SiteFooter, Story, Testimonials, Visit, WhatsAppFab } from "@/components/landing-sections";
+import { Hero, OriginMarquee, Ritual, SiteFooter, Story, Testimonials, Visit } from "@/components/landing-sections";
 import { MobileDock } from "@/components/mobile-dock";
 import { SiteHeader } from "@/components/site-header";
 import { getMenu } from "@/lib/menu";
@@ -28,7 +28,6 @@ export default async function HomePage() {
       <SiteFooter />
       <CartDrawer />
       <MobileDock />
-      <WhatsAppFab whatsappNumber={whatsappNumber} />
       <AiBaristaWidget />
     </main>
   );
