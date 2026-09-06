@@ -9,33 +9,168 @@ import type {
   ReviewSentimentSummary,
 } from "./types";
 
+// ─── Site knowledge ─────────────────────────────────────────────────────────
+// Injected into every chat system prompt so the AI can answer any question
+// about the frontend without hallucinating.
+
+const SITE_KNOWLEDGE = `
+=== AUREUM CAFE — COMPLETE SITE KNOWLEDGE ===
+
+SHOP INFO:
+  Name: Aureum
+  Tagline: "Roasted at dawn. Poured with intention."
+  Blurb: A quiet specialty atelier in SoHo for people who take their coffee personally.
+  Address: 18 Mercer Street, New York, NY 10013 (SoHo neighborhood)
+  Phone: +1 (415) 555-0188
+  Email: hello@aureum.cafe
+
+HOURS:
+  Monday – Friday: 7:00 – 18:00
+  Saturday: 8:00 – 17:00
+  Sunday: 8:00 – 16:00
+
+STORY / ORIGIN:
+  Aureum began as a Thursday roasting club above a Mercer Street walk-up.
+  Rule: if a lot cannot stand on its own as a filter pour, it does not touch the espresso machine.
+  The bar is short, the music is low, and every ticket still goes out with a name.
+  Stats: 12-hour roast rest, 6 origin lots, 1 WhatsApp ticket per order.
+
+COFFEE ORIGINS (6 lots):
+  Ethiopia Sidamo, Colombia Huila, Guatemala Antigua, Kenya Nyeri, Sumatra Mandheling, Brazil Cerrado.
+
+THE RITUAL (3 steps):
+  01 Source — Direct lots from six farms. Same elevation, same process, same harvest window.
+  02 Roast — Small batches every Thursday. Twelve hours of rest, then the first cupping before service.
+  03 Pour — Recipes written on the ticket rail. You order from the site, we pull it the same way at the bar.
+
+TESTIMONIALS:
+  "The Yirgacheffe tastes like bergamot and honey. I walk from Broome twice a week for it." — Amara V.
+  "Aureum is the only shop that treats oat milk like a craft, not an afterthought." — Leo S.
+  "Quiet, precise, and the croissant flakes like gold leaf. WhatsApp pickup is a gift." — Priya N.
+
+HOW ORDERING WORKS:
+  - Customers browse the menu on the site (section #menu).
+  - They add items to the tray (cart).
+  - They fill in their name, WhatsApp number, pickup time, and optional notes in the cart form.
+  - The order is sent to the bar via WhatsApp — the bar watches the same thread.
+  - Walk-ins are also welcome, no reservation needed.
+  - The ordering chat at the "Order" tab can parse a natural language order and add items to the cart directly.
+
+PAGE SECTIONS (anchor IDs on the single-page site):
+  #top    — Hero / landing
+  #menu   — Full menu / Featured drinks
+  #story  — Our story / About us
+  #visit  — Visit us, address, hours, WhatsApp chat button, Google Maps directions
+  #order  — Order contact box inside the Visit section
+
+OTHER PAGES:
+  /kitchen — Kitchen display / bar staff view (not for customers)
+  /owner   — Owner portal with analytics, AI insights, and reviews (not for customers)
+
+MENU CATEGORIES:
+  espresso, brew, seasonal, kitchen (food/pastries)
+`;
+
+// ─── Reply schema prompt ─────────────────────────────────────────────────────
+
+function buildSystemPrompt(catalog: string, whatsappNumber: string) {
+  const waBase = `https://wa.me/${whatsappNumber}`;
+
+  return `You are the AI Barista for Aureum Cafe. You are embedded in the website and have full awareness of every section and piece of content on the site.
+
+${SITE_KNOWLEDGE}
+
+LIVE MENU CATALOG (current items from database):
+${catalog}
+
+WHATSAPP NUMBER: ${whatsappNumber}
+WhatsApp base URL: ${waBase}
+
+=== RESPONSE FORMAT — CRITICAL ===
+You MUST respond with ONLY a single valid JSON object. No prose outside the JSON.
+Choose exactly one of these shapes:
+
+1. Plain text reply:
+   { "type": "text", "content": "your message here" }
+
+2. Navigate to a page section:
+   { "type": "navigate", "anchor": "#menu", "message": "Here's our full menu!" }
+   Valid anchors: #top #menu #story #visit #order
+
+3. Open WhatsApp with a pre-filled message:
+   { "type": "whatsapp", "waUrl": "${waBase}?text=Hello%20Aureum", "message": "Opening WhatsApp for you now!" }
+
+4. Pre-fill the order checkout form (also opens the cart drawer):
+   { "type": "formFill", "name": "Alex", "phone": "+1 234 567 8900", "pickup": "30 minutes", "notes": "Oat milk please", "message": "I've filled in your details in the order form!" }
+   Valid pickup values: "As soon as ready", "15 minutes", "30 minutes", "45 minutes", "1 hour"
+   Omit any field that wasn't provided.
+
+5. Open the cart drawer:
+   { "type": "openCart", "message": "Opening your cart tray!" }
+
+=== BEHAVIOUR RULES ===
+- ALWAYS answer from the SITE KNOWLEDGE and MENU CATALOG above. Never invent products, prices, or facts.
+- If asked where something is on the page, use the "navigate" action to take them there.
+- If asked to order on WhatsApp, use the "whatsapp" action with a helpful pre-filled message including their order if mentioned.
+- If the user gives their name/phone/pickup time, use "formFill" to pre-fill the checkout form.
+- If asked about hours, address, story, ritual, origins — use "text".
+- Be warm, concise, and precise. Aureum's tone is quiet confidence, not chattiness.
+- If you don't know something, say so honestly.
+`;
+}
+
+// ─── Gemini Provider ─────────────────────────────────────────────────────────
+
 export class GeminiProvider implements AIServiceProvider {
   private ai: GoogleGenAI;
-  private defaultModel = "gemini-3.6-flash";
+  private defaultModel = "gemini-2.5-flash";
 
   constructor(apiKey: string) {
     this.ai = new GoogleGenAI({ apiKey });
   }
 
-  async chat(messages: BaristaMessage[]): Promise<string> {
-    const systemInstruction = messages.find((m) => m.role === "system")?.content || "";
-    const history = messages
+  async chat(messages: BaristaMessage[], whatsappNumber = "14155550188"): Promise<string> {
+    // Separate system message from history
+    const userMessages = messages.filter((m) => m.role !== "system");
+
+    // Build catalog summary from site knowledge only (no DB in this context)
+    // The route injects the catalog separately; here we use a placeholder that
+    // gets replaced by the route before calling.
+    const catalogPlaceholder = messages.find((m) => m.role === "system")?.content ?? "";
+
+    const systemInstruction = buildSystemPrompt(catalogPlaceholder, whatsappNumber);
+
+    const history = userMessages
       .filter((m) => m.role !== "system")
       .map((m) => ({
         role: m.role === "assistant" ? "model" : "user",
         parts: [{ text: m.content }],
       }));
 
+    // Gemini requires at least one user turn
+    const contents = history.length > 0 ? history : [{ role: "user", parts: [{ text: "Hello" }] }];
+
     try {
       const response = await this.ai.models.generateContent({
         model: this.defaultModel,
-        contents: history as any,
-        config: { systemInstruction },
+        contents: contents as any,
+        config: {
+          systemInstruction,
+          responseMimeType: "application/json",
+        },
       });
-      return response.text || "I'm having trouble processing that right now.";
+
+      const raw = response.text?.trim() ?? "";
+      // Validate it parses as JSON — if not, wrap it
+      try {
+        JSON.parse(raw);
+        return raw;
+      } catch {
+        return JSON.stringify({ type: "text", content: raw || "I'm having trouble thinking right now." });
+      }
     } catch (error) {
       console.error("Gemini chat error:", error);
-      return "I'm having trouble connecting to my coffee brain right now.";
+      return JSON.stringify({ type: "text", content: "I'm having trouble connecting to my coffee brain right now." });
     }
   }
 
@@ -156,7 +291,6 @@ ${JSON.stringify(toolsData)}
         parts: [{ text: m.content }],
       }));
 
-    // Gemini rejects empty contents — ensure there's at least one user turn
     const contents = history.length > 0 ? history : [{ role: "user", parts: [{ text: "Hello" }] }];
 
     try {
@@ -173,9 +307,14 @@ ${JSON.stringify(toolsData)}
   }
 }
 
+// ─── Fallback Provider ────────────────────────────────────────────────────────
+
 export class FallbackProvider implements AIServiceProvider {
-  async chat(messages: BaristaMessage[]): Promise<string> {
-    return "The AI Barista is currently taking a coffee break (API key not configured). Please browse the menu manually!";
+  async chat(messages: BaristaMessage[], whatsappNumber?: string): Promise<string> {
+    return JSON.stringify({
+      type: "text",
+      content: "The AI Barista is currently taking a coffee break (API key not configured). You can still browse the menu or use the Order tab!",
+    });
   }
 
   async parseNaturalLanguageOrder(text: string, catalog: MenuItemDTO[]): Promise<ParsedOrder> {
@@ -213,13 +352,15 @@ export class FallbackProvider implements AIServiceProvider {
   }
 }
 
+// ─── Factory ──────────────────────────────────────────────────────────────────
+
 export function getAIProvider(): AIServiceProvider {
   const geminiKey = process.env.GEMINI_API_KEY;
   if (geminiKey) {
     return new GeminiProvider(geminiKey);
   }
-  
+
   // Note: Could add GroqProvider here in the future
-  
+
   return new FallbackProvider();
 }

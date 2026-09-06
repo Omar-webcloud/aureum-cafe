@@ -3,6 +3,13 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import type { CartLine, MenuItemDTO } from "@/lib/types";
 
+export type FormPrefill = {
+  name?: string;
+  phone?: string;
+  pickup?: string;
+  notes?: string;
+};
+
 type CartContextValue = {
   items: CartLine[];
   count: number;
@@ -15,6 +22,12 @@ type CartContextValue = {
   setQuantity: (menuItemId: number, quantity: number) => void;
   removeItem: (menuItemId: number) => void;
   clear: () => void;
+  /** Pre-fill the checkout form fields (used by AI Barista). Also opens the cart. */
+  fillForm: (fields: FormPrefill) => void;
+  /** Current prefill values — consumed by CartDrawer */
+  formPrefill: FormPrefill;
+  /** Clear the prefill after CartDrawer has applied it */
+  clearFormPrefill: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -22,6 +35,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartLine[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [formPrefill, setFormPrefill] = useState<FormPrefill>({});
 
   const addItem = useCallback((item: MenuItemDTO, quantity = 1) => {
     setItems((current) => {
@@ -61,6 +75,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((current) => current.filter((line) => line.menuItemId !== menuItemId));
   }, []);
 
+  const fillForm = useCallback((fields: FormPrefill) => {
+    setFormPrefill(fields);
+    setIsOpen(true);
+  }, []);
+
+  const clearFormPrefill = useCallback(() => {
+    setFormPrefill({});
+  }, []);
+
   const value = useMemo<CartContextValue>(
     () => ({
       items,
@@ -74,8 +97,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setQuantity,
       removeItem,
       clear: () => setItems([]),
+      fillForm,
+      formPrefill,
+      clearFormPrefill,
     }),
-    [addItem, isOpen, items, removeItem, setQuantity],
+    [addItem, isOpen, items, removeItem, setQuantity, fillForm, formPrefill, clearFormPrefill],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

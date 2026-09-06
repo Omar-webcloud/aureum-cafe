@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { menuItems } from "@/db/schema";
 import { getAIProvider } from "@/lib/ai/provider";
 import { checkRateLimit } from "@/lib/ai/rate-limiter";
+import { getWhatsAppNumber } from "@/lib/shop";
 import type { BaristaMessage } from "@/lib/ai/types";
 
 export const dynamic = "force-dynamic";
@@ -17,55 +18,59 @@ export async function POST(request: Request) {
     const body = await request.json();
     const action = body.action; // "chat", "recommend", "parseOrder"
     const provider = getAIProvider();
+    const whatsappNumber = getWhatsAppNumber();
 
-    // Fetch catalog for context
+    // Fetch catalog for context (shared across all actions)
     const catalog = await db.select().from(menuItems);
 
     if (action === "chat") {
       const userMessages: BaristaMessage[] = body.messages || [];
-      // Build system prompt injecting catalog
-      const systemMessage: BaristaMessage = {
-        role: "system",
-        content: `You are the AI Barista for Aureum Cafe.
-Be friendly, concise, and helpful. 
-You MUST answer questions using ONLY the provided menu catalog. Do not invent products, prices, or ingredients.
-If you don't know the answer, say "I don't have that information yet. Please ask the shop."
 
-Menu Catalog:
-${JSON.stringify(catalog.map((c: any) => ({
-  name: c.name,
-  description: c.description,
-  price: c.priceCents / 100 + " USD", // Formatting as USD or BDT depending on store config, let's keep it simple
-  category: c.category,
-  ingredients: c.ingredients,
-  allergens: c.allergens,
-  milkOptions: c.milkOptions,
-  temperatureOptions: c.temperatureOptions,
-  sweetness: c.sweetnessLevel,
-  strength: c.coffeeStrength,
-  isDairyFree: c.isDairyFree,
-  isGlutenFree: c.isGlutenFree
-})))}`
-      };
+      // Build the catalog string to inject as the system message content.
+      // GeminiProvider reads the system-role message's content as the catalog block
+      // and injects it into buildSystemPrompt().
+      const catalogSummary = JSON.stringify(
+        catalog.map((c: any) => ({
+          name: c.name,
+          description: c.description,
+          price: (c.priceCents / 100).toFixed(2) + " USD",
+          category: c.category,
+          ingredients: c.ingredients,
+          allergens: c.allergens,
+          milkOptions: c.milkOptions,
+          temperatureOptions: c.temperatureOptions,
+          sweetnessLevel: c.sweetnessLevel,
+          coffeeStrength: c.coffeeStrength,
+          isDairyFree: c.isDairyFree,
+          isGlutenFree: c.isGlutenFree,
+          available: c.available,
+        })),
+        null,
+        2,
+      );
 
-      const messages = [systemMessage, ...userMessages];
-      const reply = await provider.chat(messages);
-      return Response.json({ reply });
+      // Prepend catalog as a system message so GeminiProvider can extract it
+      const messages: BaristaMessage[] = [
+        { role: "system", content: catalogSummary },
+        ...userMessages,
+      ];
+
+      const replyJson = await provider.chat(messages, whatsappNumber);
+      return Response.json({ reply: replyJson });
     }
 
     if (action === "recommend") {
       const preferences: string[] = body.preferences || [];
       const recommendations = await provider.recommendProducts(preferences, catalog as any);
-      
+
       // Enhance recommendations with actual product data
-      const results = recommendations.map(rec => {
-        const product = catalog.find((p: any) => p.id === rec.productId);
-        return {
-          ...rec,
-          product
-        };
-      }).filter(r => r.product != null);
-      
+      const results = recommendations
+        .map((rec) => {
+          const product = catalog.find((p: any) => p.id === rec.productId);
+          return { ...rec, product };
+        })
+        .filter((r) => r.product != null);
+
       return Response.json({ recommendations: results });
     }
 
@@ -76,7 +81,6 @@ ${JSON.stringify(catalog.map((c: any) => ({
     }
 
     return Response.json({ error: "Unknown action" }, { status: 400 });
-
   } catch (error) {
     console.error("AI Barista API Error:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });

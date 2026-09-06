@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import Image from "next/image";
 import { formatUsd } from "@/lib/money";
 import type { OrderError, OrderResponse } from "@/lib/types";
@@ -9,7 +9,7 @@ import { useCart } from "@/components/cart-context";
 const pickupWindows = ["As soon as ready", "15 minutes", "30 minutes", "45 minutes", "1 hour"];
 
 export function CartDrawer() {
-  const { items, isOpen, closeCart, setQuantity, removeItem, subtotalCents, clear, count } = useCart();
+  const { items, isOpen, closeCart, setQuantity, removeItem, subtotalCents, clear, count, formPrefill, clearFormPrefill } = useCart();
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [pickupTime, setPickupTime] = useState(pickupWindows[0]);
@@ -17,6 +17,23 @@ export function CartDrawer() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<OrderResponse | null>(null);
+
+  // Apply AI-prefilled form values whenever a new prefill arrives
+  useEffect(() => {
+    if (!formPrefill || Object.keys(formPrefill).length === 0) return;
+    if (formPrefill.name    !== undefined) setCustomerName(formPrefill.name);
+    if (formPrefill.phone   !== undefined) setCustomerPhone(formPrefill.phone);
+    if (formPrefill.notes   !== undefined) setNotes(formPrefill.notes);
+    if (formPrefill.pickup  !== undefined) {
+      // Match against available options (case-insensitive partial match)
+      const matched = pickupWindows.find(
+        (w) => w.toLowerCase().includes(formPrefill.pickup!.toLowerCase()) ||
+               formPrefill.pickup!.toLowerCase().includes(w.toLowerCase()),
+      );
+      if (matched) setPickupTime(matched);
+    }
+    clearFormPrefill();
+  }, [formPrefill, clearFormPrefill]);
 
   async function placeOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,6 +83,7 @@ export function CartDrawer() {
     setError(null);
     closeCart();
   }
+
 
   return (
     <>

@@ -45,8 +45,19 @@ export type OwnerInsight = {
   type: "positive" | "negative" | "neutral" | "trend";
 };
 
+/**
+ * Structured reply the AI Barista returns for every chat turn.
+ * The widget parses this and executes the appropriate frontend action.
+ */
+export type BaristaReply =
+  | { type: "text";     content: string }
+  | { type: "navigate"; anchor: string;  message: string }
+  | { type: "whatsapp"; waUrl: string;   message: string }
+  | { type: "formFill"; name?: string;   phone?: string; pickup?: string; notes?: string; message: string }
+  | { type: "openCart"; message: string };
+
 export interface AIServiceProvider {
-  chat(messages: BaristaMessage[]): Promise<string>;
+  chat(messages: BaristaMessage[], whatsappNumber?: string): Promise<string>;
   parseNaturalLanguageOrder(text: string, catalog: MenuItemDTO[]): Promise<ParsedOrder>;
   recommendProducts(preferences: string[], catalog: MenuItemDTO[]): Promise<RecommendationResult[]>;
   generateBusinessInsights(ordersData: any[], catalog: MenuItemDTO[]): Promise<OwnerInsight[]>;
