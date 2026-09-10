@@ -1,14 +1,14 @@
 import { db } from "@/db";
 import { menuItems, orderItems, orders, reviews } from "@/db/schema";
 import { getAIProvider } from "@/lib/ai/provider";
-import { checkRateLimit } from "@/lib/ai/rate-limiter";
+import { checkRateLimit, getClientIp } from "@/lib/ai/rate-limiter";
 import { inArray } from "drizzle-orm";
 import type { BaristaMessage } from "@/lib/ai/types";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
+  const ip = getClientIp(request);
   if (!checkRateLimit(ip)) {
     return Response.json({ error: "Too many requests" }, { status: 429 });
   }

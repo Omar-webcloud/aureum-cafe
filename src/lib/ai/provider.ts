@@ -71,6 +71,46 @@ MENU CATEGORIES:
   espresso, brew, seasonal, kitchen (food/pastries)
 `;
 
+// ─── History / token budget helpers ─────────────────────────────────────────
+//
+// Root cause of "exhausts too early": every chat turn re-sent the FULL
+// conversation history PLUS the full site-knowledge block PLUS the full menu
+// catalog as the system prompt. That means turn 1 might cost ~1.5k tokens,
+// but turn 10 of the same conversation re-sends turns 1-9 too, so the same
+// static ~1.5k-token prompt gets billed again on every single turn on top of
+// a growing history. Free-tier providers (Gemini free tier, and especially
+// Groq — ~8-12k TPM on gpt-oss-120b) run out of their per-minute token budget
+// after just a few turns of a real conversation, which surfaces as "quota
+// exhausted" even though the user only sent a handful of messages. Capping
+// how much history we forward keeps the request size roughly constant
+// instead of growing without bound.
+const MAX_HISTORY_MESSAGES = 8; // last N messages (user+assistant), oldest dropped first
+
+function capHistory(messages: BaristaMessage[]): BaristaMessage[] {
+  const nonSystem = messages.filter((m) => m.role !== "system");
+  if (nonSystem.length <= MAX_HISTORY_MESSAGES) return nonSystem;
+  return nonSystem.slice(-MAX_HISTORY_MESSAGES);
+}
+
+/**
+ * Races a provider call against a timeout so a slow/hanging primary call
+ * doesn't block the user (or a fallback provider) for the full network
+ * timeout. This is what was making replies feel "very slow": on failure the
+ * app waits for Gemini's full request to time out before it even starts the
+ * Groq fallback, so a single slow call became two slow calls back to back.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (err) => { clearTimeout(timer); reject(err); },
+    );
+  });
+}
+
+const PROVIDER_TIMEOUT_MS = 12_000;
+
 // ─── Reply schema prompt ─────────────────────────────────────────────────────
 
 function buildSystemPrompt(catalog: string, whatsappNumber: string) {
@@ -124,16 +164,20 @@ Choose exactly one of these shapes:
 export class GeminiProvider implements AIServiceProvider {
   private ai: GoogleGenAI;
   private defaultModel = process.env.GEMINI_MODEL || "gemini-3.6-flash";
-  private fallbackModel = "gemini-3.6-flash";
+  // BUG FIX: this used to be the exact same string as `defaultModel`, so the
+  // "retry with fallback model" branch below was a no-op — a failed call
+  // just re-issued an identical call to the same model and (usually) failed
+  // the same way, burning a second slice of the same rate-limit window for
+  // nothing. Use a genuinely different, lighter/cheaper model here so a
+  // retry actually has a different failure mode (e.g. still up when the
+  // primary model's quota is exhausted).
+  private fallbackModel = process.env.GEMINI_FALLBACK_MODEL || "gemini-3.1-flash-lite";
 
   constructor(apiKey: string) {
     this.ai = new GoogleGenAI({ apiKey });
   }
 
   async chat(messages: BaristaMessage[], whatsappNumber = "14155550188"): Promise<string> {
-    // Separate system message from history
-    const userMessages = messages.filter((m) => m.role !== "system");
-
     // Build catalog summary from site knowledge only (no DB in this context)
     // The route injects the catalog separately; here we use a placeholder that
     // gets replaced by the route before calling.
@@ -141,25 +185,31 @@ export class GeminiProvider implements AIServiceProvider {
 
     const systemInstruction = buildSystemPrompt(catalogPlaceholder, whatsappNumber);
 
-    const history = userMessages
-      .filter((m) => m.role !== "system")
-      .map((m) => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }],
-      }));
+    // Cap history so a long conversation doesn't keep growing the token bill
+    // on every single turn (see capHistory doc comment above).
+    const userMessages = capHistory(messages);
+
+    const history = userMessages.map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
 
     // Gemini requires at least one user turn
     const contents = history.length > 0 ? history : [{ role: "user", parts: [{ text: "Hello" }] }];
 
     const generateChatResponse = (model: string) =>
-      this.ai.models.generateContent({
-        model,
-        contents: contents as any,
-        config: {
-          systemInstruction,
-          responseMimeType: "application/json",
-        },
-      });
+      withTimeout(
+        this.ai.models.generateContent({
+          model,
+          contents: contents as any,
+          config: {
+            systemInstruction,
+            responseMimeType: "application/json",
+          },
+        }),
+        PROVIDER_TIMEOUT_MS,
+        `Gemini chat (${model})`,
+      );
 
     try {
       const response = await generateChatResponse(this.defaultModel);
@@ -186,7 +236,12 @@ export class GeminiProvider implements AIServiceProvider {
         }
       }
 
-      return JSON.stringify({ type: "text", content: "I'm temporarily offline. Please try that question again in a moment." });
+      // Throw instead of swallowing into a "text" reply — BaristaFallbackProvider
+      // needs a real rejection to know it should try Groq. Returning a JSON
+      // "text" reply here (as before) looks like a *successful* Gemini call,
+      // so the wrapper's error-based failover never triggers, and only its
+      // fragile string-matching fallback on the reply content kicks in.
+      throw error instanceof Error ? error : new Error(String(error));
     }
   }
 
@@ -208,15 +263,19 @@ ${JSON.stringify(catalog, ["id", "name", "category", "milkOptions", "temperature
 `;
 
     try {
-      const response = await this.ai.models.generateContent({
-        model: this.defaultModel,
-        contents: text,
-        config: { systemInstruction: systemPrompt, responseMimeType: "application/json" },
-      });
+      const response = await withTimeout(
+        this.ai.models.generateContent({
+          model: this.defaultModel,
+          contents: text,
+          config: { systemInstruction: systemPrompt, responseMimeType: "application/json" },
+        }),
+        PROVIDER_TIMEOUT_MS,
+        "Gemini parseNaturalLanguageOrder",
+      );
       return JSON.parse(response.text || "{}") as ParsedOrder;
     } catch (error) {
       console.error("Gemini parse order error:", error);
-      return { ok: false, items: [], error: "Failed to parse order." };
+      throw error instanceof Error ? error : new Error(String(error));
     }
   }
 
@@ -234,15 +293,19 @@ Preferences: ${preferences.join(", ")}
 `;
 
     try {
-      const response = await this.ai.models.generateContent({
-        model: this.defaultModel,
-        contents: "Recommend products based on my preferences.",
-        config: { systemInstruction: systemPrompt, responseMimeType: "application/json" },
-      });
+      const response = await withTimeout(
+        this.ai.models.generateContent({
+          model: this.defaultModel,
+          contents: "Recommend products based on my preferences.",
+          config: { systemInstruction: systemPrompt, responseMimeType: "application/json" },
+        }),
+        PROVIDER_TIMEOUT_MS,
+        "Gemini recommendProducts",
+      );
       return JSON.parse(response.text || "[]") as RecommendationResult[];
     } catch (error) {
       console.error("Gemini recommend error:", error);
-      return [];
+      throw error instanceof Error ? error : new Error(String(error));
     }
   }
 
@@ -300,21 +363,23 @@ Use this data to answer the owner's questions accurately and concisely. Do not m
 Data:
 ${JSON.stringify(toolsData)}
 `;
-    const history = messages
-      .filter((m) => m.role !== "system")
-      .map((m) => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }],
-      }));
+    const history = capHistory(messages).map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
 
     const contents = history.length > 0 ? history : [{ role: "user", parts: [{ text: "Hello" }] }];
 
     const generateOwnerResponse = (model: string) =>
-      this.ai.models.generateContent({
-        model,
-        contents: contents as any,
-        config: { systemInstruction },
-      });
+      withTimeout(
+        this.ai.models.generateContent({
+          model,
+          contents: contents as any,
+          config: { systemInstruction },
+        }),
+        PROVIDER_TIMEOUT_MS,
+        `Gemini ownerAssistantChat (${model})`,
+      );
 
     try {
       const response = await generateOwnerResponse(this.defaultModel);
@@ -340,7 +405,15 @@ ${JSON.stringify(toolsData)}
 
 export class GroqProvider implements AIServiceProvider {
   private apiKey: string;
-  private model = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+  // BUG/CONFIG FIX: "openai/gpt-oss-120b" is a big model, and on Groq's free
+  // tier it is capped far tighter than the small instant models — roughly
+  // 1,000 requests/day and a low per-minute token budget, vs. ~14,400
+  // requests/day for llama-3.1-8b-instant. For a Barista chat/order-parsing
+  // fallback (short, structured JSON answers, not deep reasoning), the 8B
+  // instant model gives ~14x the daily headroom and responds several times
+  // faster, which directly addresses both "exhausts too early" and "very
+  // slow". Override with GROQ_MODEL if you specifically want the 120B model.
+  private model = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -353,6 +426,11 @@ export class GroqProvider implements AIServiceProvider {
         Authorization: `Bearer ${this.apiKey}`,
         "Content-Type": "application/json",
       },
+      // AbortSignal.timeout keeps a hung/slow Groq call from stalling the
+      // response for the default fetch timeout (which can be a minute or
+      // more) — see withTimeout doc comment for why that matters when this
+      // is itself already a fallback for a slow/failed Gemini call.
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
       body: JSON.stringify({
         model: this.model,
         messages,
@@ -363,7 +441,10 @@ export class GroqProvider implements AIServiceProvider {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(`Groq request failed with status ${response.status}: ${errorBody}`);
+      const isRateLimited = response.status === 429;
+      throw new Error(
+        `Groq request failed with status ${response.status}${isRateLimited ? " (rate/quota limited)" : ""}: ${errorBody}`,
+      );
     }
 
     const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
@@ -372,9 +453,7 @@ export class GroqProvider implements AIServiceProvider {
 
   async chat(messages: BaristaMessage[], whatsappNumber = "14155550188"): Promise<string> {
     const catalog = messages.find((message) => message.role === "system")?.content ?? "";
-    const history = messages
-      .filter((message) => message.role !== "system")
-      .map((message) => ({ role: message.role, content: message.content }));
+    const history = capHistory(messages).map((message) => ({ role: message.role, content: message.content }));
     const raw = await this.complete([
       { role: "system", content: buildSystemPrompt(catalog, whatsappNumber) },
       ...(history.length > 0 ? history : [{ role: "user" as const, content: "Hello" }]),
@@ -429,9 +508,15 @@ export class BaristaFallbackProvider implements AIServiceProvider {
   constructor(private primary: AIServiceProvider, private fallback: AIServiceProvider) {}
 
   async chat(messages: BaristaMessage[], whatsappNumber?: string): Promise<string> {
-    let reply: string;
+    // Both providers now reject (throw) on real failure — including
+    // timeouts and rate-limit/quota errors — instead of resolving with a
+    // "temporarily offline" JSON string. That means this failover is driven
+    // by actual error signals, not by string-sniffing the reply content, so
+    // a genuine Gemini answer that happens to mention "offline" is never
+    // mistaken for a failure, and a real failure never slips through as if
+    // it succeeded.
     try {
-      reply = await this.primary.chat(messages, whatsappNumber);
+      return await this.primary.chat(messages, whatsappNumber);
     } catch (error) {
       console.error("Primary AI barista chat failed; switching to Groq:", error);
       try {
@@ -440,18 +525,6 @@ export class BaristaFallbackProvider implements AIServiceProvider {
         console.error("Groq AI barista chat failed:", fallbackError);
         return JSON.stringify({ type: "text", content: "I'm temporarily offline. Please try that question again in a moment." });
       }
-    }
-    try {
-      const parsed = JSON.parse(reply) as { content?: string };
-      if (!parsed.content?.includes("temporarily offline")) return reply;
-    } catch {
-      return reply;
-    }
-    try {
-      return await this.fallback.chat(messages, whatsappNumber);
-    } catch (error) {
-      console.error("Groq AI barista chat failed:", error);
-      return JSON.stringify({ type: "text", content: "I'm temporarily offline. Please try that question again in a moment." });
     }
   }
 
