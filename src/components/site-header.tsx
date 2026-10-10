@@ -51,7 +51,8 @@ export function SiteHeader() {
           <button
             type="button"
             onClick={openCart}
-            className="flex items-center gap-2 sm:gap-3 rounded-full border border-foam/20 bg-foam/10 p-2 sm:px-4 sm:py-2 text-[11px] uppercase tracking-[0.22em] text-foam transition hover:border-gold hover:text-gold"
+            aria-label="Open shopping cart"
+            className="flex items-center gap-2 sm:gap-3 rounded-full border border-foam/20 bg-foam/10 p-2 sm:px-4 sm:py-2 text-[11px] uppercase tracking-[0.22em] text-foam transition hover:border-gold hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/80 focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
           >
             <ShoppingCart className="h-4 w-4 sm:hidden" />
             <span className="hidden sm:inline">Order</span>

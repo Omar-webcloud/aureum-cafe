@@ -12,7 +12,8 @@ export function MobileDock() {
       <button
         type="button"
         onClick={openCart}
-        className="flex h-14 w-full items-center justify-between rounded-full bg-ink px-6 text-foam shadow-[0_16px_40px_rgba(20,14,10,0.35)]"
+        aria-label="Open shopping cart"
+        className="flex h-14 w-full items-center justify-between rounded-full bg-ink px-6 text-foam shadow-[0_16px_40px_rgba(20,14,10,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/80 focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
       >
         <span className="text-[11px] uppercase tracking-[0.2em]">View tray · {count}</span>
         <span className="text-sm">{formatUsd(subtotalCents)}</span>

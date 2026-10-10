@@ -95,7 +95,8 @@ export function FullMenu({ items }: { items: MenuItemDTO[] }) {
                 key={tab.id}
                 type="button"
                 onClick={() => setActive(tab.id)}
-                className={`rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition ${
+                aria-pressed={active === tab.id}
+                className={`rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/80 focus-visible:ring-offset-2 ${
                   active === tab.id ? "bg-ink text-foam" : "bg-white text-ink/60 hover:text-ink"
                 }`}
               >

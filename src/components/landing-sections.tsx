@@ -12,7 +12,7 @@ export function Hero() {
         className="object-cover object-center"
         sizes="100vw"
       />
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/45 to-black/35" />
       <div className="grain absolute inset-0" />
       <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-16 pt-32 sm:px-8 sm:pb-20">
         <p className="text-[11px] uppercase tracking-[0.42em] text-gold">SoHo · Specialty atelier</p>
@@ -21,7 +21,7 @@ export function Hero() {
           <br />
           every cup.
         </h1>
-        <p className="mt-6 max-w-lg text-base leading-7 text-foam/75 sm:text-lg">{shop.tagline}</p>
+        <p className="mt-8 max-w-lg text-base leading-7 text-foam/85 sm:mt-10 sm:text-lg">{shop.tagline}</p>
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <a
             href="#menu"
@@ -30,7 +30,7 @@ export function Hero() {
             Explore the menu
           </a>
           <a
-            href="#order"
+            href="#visit"
             className="inline-flex h-12 items-center rounded-full border border-foam/25 px-7 text-[11px] uppercase tracking-[0.24em] text-foam transition hover:border-gold hover:text-gold"
           >
             Order via WhatsApp
@@ -59,7 +59,7 @@ export function OriginMarquee() {
 
 export function Story() {
   return (
-    <section id="story" className="scroll-mt-24 bg-foam px-5 py-24 sm:px-8">
+    <section id="story" className="scroll-mt-28 bg-foam px-5 py-24 sm:px-8">
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="relative min-h-[520px] overflow-hidden rounded-[32px]">
           <Image
@@ -177,12 +177,12 @@ export function Testimonials() {
 
 export function Visit({ whatsappNumber }: { whatsappNumber: string }) {
   return (
-    <section id="visit" className="scroll-mt-24 bg-foam px-5 py-24 sm:px-8">
+    <section id="visit" className="scroll-mt-28 bg-foam px-5 py-24 sm:px-8">
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-2">
         <div className="relative min-h-[420px] overflow-hidden rounded-[32px]">
           <Image src="/images/interior.png" alt="Aureum dining room" fill className="object-cover" sizes="50vw" />
         </div>
-        <div id="order" className="rounded-[32px] bg-ink p-8 text-foam sm:p-12">
+        <div id="order" className="scroll-mt-28 rounded-[32px] bg-ink p-8 text-foam sm:p-12">
           <p className="text-[11px] uppercase tracking-[0.32em] text-gold">Visit</p>
           <h2 className="mt-3 font-display text-5xl leading-none">18 Mercer. Come in, or send the ticket ahead.</h2>
           <p className="mt-5 text-sm leading-7 text-foam/70">
@@ -259,4 +259,3 @@ export function SiteFooter() {
     </footer>
   );
 }
-

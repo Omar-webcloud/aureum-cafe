@@ -6,8 +6,37 @@ A full-stack specialty coffee storefront built with Next.js 16. Customers browse
 
 ---
 
+## Quick Start
+
+If you want to run the app locally, start here:
+
+```bash
+git clone https://github.com/Omar-webcloud/aureum-cafe.git
+cd aureum-cafe
+npm install
+```
+
+Create a local `.env.local` file and add the variables you need for your setup:
+
+```bash
+GEMINI_API_KEY=your_google_ai_key
+GROQ_API_KEY=your_optional_groq_key
+WHATSAPP_NUMBER=14155550188
+```
+
+Then start the app:
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:3000` in your browser.
+
+> If you are only here to understand the experience and not run the code, continue with the sections below. The app supports a no-database demo mode out of the box; a real database is only needed if you want persistence beyond a cold start.
+
 ## Table of Contents
 
+- [Quick Start](#quick-start)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [User Flows](#user-flows)
@@ -30,6 +59,7 @@ A full-stack specialty coffee storefront built with Next.js 16. Customers browse
   - [Animations](#animations)
 - [Environment Variables](#environment-variables)
 - [Local Development](#local-development)
+- [Troubleshooting](#troubleshooting)
 - [Deployment](#deployment)
 
 ---
@@ -394,31 +424,55 @@ Add these in **Vercel → Project → Settings → Environment Variables**:
 
 ## Local Development
 
-```bash
-# 1. Clone
-git clone https://github.com/your-org/aureum-cafe.git
-cd aureum-cafe
+Use the shortest path to get the app running locally:
 
-# 2. Install
+```bash
+# 1) Clone and install
+git clone https://github.com/Omar-webcloud/aureum-cafe.git
+cd aureum-cafe
 npm install
 
-# 3. Set environment variables
-cp .env.local.example .env.local
-# Edit .env.local with your GEMINI_API_KEY
+# 2) Create a local environment file
+# PowerShell
+Set-Content .env.local @"
+GEMINI_API_KEY=your_google_ai_key
+GROQ_API_KEY=your_optional_groq_key
+WHATSAPP_NUMBER=14155550188
+"@
 
-# 4. Run dev server
+# Bash / zsh
+cat > .env.local <<'EOF'
+GEMINI_API_KEY=your_google_ai_key
+GROQ_API_KEY=your_optional_groq_key
+WHATSAPP_NUMBER=14155550188
+EOF
+
+# 3) Run the app
 npm run dev
-# → http://localhost:3000
 ```
 
-**Routes available locally:**
+Then open:
 
 | URL | Description |
-|---|---|
+|---|---| 
 | `http://localhost:3000/` | Customer storefront |
 | `http://localhost:3000/kitchen` | Kitchen ticket rail |
 | `http://localhost:3000/owner` | Owner dashboard (PIN: `1234`) |
 | `http://localhost:3000/api/health` | Health check |
+
+> `GEMINI_API_KEY` is the only required key for the base app. `GROQ_API_KEY` is optional and acts as a fallback provider. The app is demo-ready without a database connection; the default data layer is in-memory and resets on cold starts.
+
+---
+
+## Troubleshooting
+
+### Common friction points
+
+- **The app starts, but AI answers do not work:** make sure `GEMINI_API_KEY` is set in `.env.local` before running `npm run dev`.
+- **No menu data appears:** the app seeds its catalog on first request; reload once after the server is ready.
+- **Orders do not persist after refresh:** this is expected in demo mode. The default in-memory store resets on cold starts.
+- **WhatsApp actions do nothing:** set `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` if you want server-side sending. Otherwise the app still builds the pre-filled WhatsApp link.
+- **The repo is still confusing to a new developer:** start with the quick-start section above and ignore the deeper architecture docs until the app is running.
 
 ---
 
