@@ -15,7 +15,6 @@ export function Hero() {
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/45 to-black/35" />
       <div className="grain absolute inset-0" />
       <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-16 pt-32 sm:px-8 sm:pb-20">
-        <p className="text-[11px] uppercase tracking-[0.42em] text-gold">SoHo · Specialty atelier</p>
         <h1 className="mt-5 max-w-4xl font-display text-[18vw] leading-[0.78] sm:text-[7.4rem]">
           Gold in
           <br />
