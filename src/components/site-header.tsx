@@ -27,22 +27,27 @@ export function SiteHeader() {
       className="fixed inset-x-0 top-0 z-40 px-3 pt-3 text-ink sm:px-6 sm:pt-4"
     >
       <div
-        className={`mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full border border-ink/5 bg-white/95 px-4 backdrop-blur-xl transition-shadow duration-300 sm:h-16 sm:px-6 ${
+        className={`relative mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full border border-ink/5 bg-white/95 px-4 backdrop-blur-xl transition-shadow duration-300 sm:h-16 sm:px-6 ${
           scrolled ? "shadow-[0_12px_40px_rgba(20,14,10,0.12)]" : "shadow-[0_8px_30px_rgba(20,14,10,0.06)]"
         }`}
       >
+        {/* Logo — left */}
         <a href="#top" aria-label="Aureum home">
           <span className="grid h-9 w-9 place-items-center rounded-full border border-gold/70 font-display text-lg text-gold-deep">
             A
           </span>
         </a>
-        <nav className="hidden items-center gap-8 text-[11px] uppercase tracking-[0.26em] text-ink/75 md:flex">
+
+        {/* Nav — absolutely centered */}
+        <nav className="hidden items-center gap-8 text-[11px] uppercase tracking-[0.26em] text-ink/75 md:flex absolute left-1/2 -translate-x-1/2">
           {links.map((link) => (
             <a key={link.href} href={link.href} className="transition hover:text-gold-deep">
               {link.label}
             </a>
           ))}
         </nav>
+
+        {/* Right actions */}
         <div className="flex items-center gap-4">
           <Link href="/owner" className="text-gold-deep hover:text-gold transition-colors flex items-center gap-2">
             <User className="h-5 w-5 sm:hidden" />
