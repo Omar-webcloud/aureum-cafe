@@ -101,14 +101,14 @@ export default function OwnerDashboard() {
               value={pin}
               onChange={e => setPin(e.target.value)}
               placeholder="Enter PIN (1234)"
-              className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-lg px-4 py-3 focus:outline-none focus:border-amber-500"
+              className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-lg px-4 py-3 focus:outline-none focus:border-gold"
             />
-            <button type="submit" className="w-full bg-amber-500 text-zinc-950 font-semibold py-3 rounded-lg hover:bg-amber-400 transition-colors">
+            <button type="submit" className="w-full bg-gold text-zinc-950 font-semibold py-3 rounded-lg hover:bg-gold-light transition-colors">
               Unlock Dashboard
             </button>
           </form>
           <div className="mt-4 text-center">
-             <Link href="/" className="text-amber-500 text-sm hover:underline">Back to Store</Link>
+             <Link href="/" className="text-gold text-sm hover:underline">Back to Store</Link>
           </div>
         </div>
       </div>
@@ -129,7 +129,7 @@ export default function OwnerDashboard() {
             <button onClick={loadData} className="px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-sm hover:bg-zinc-800 transition">
               Refresh Data
             </button>
-            <Link href="/" className="px-4 py-2 bg-amber-500 text-zinc-950 font-semibold rounded-lg text-sm hover:bg-amber-400 transition">
+            <Link href="/" className="px-4 py-2 bg-gold text-zinc-950 font-semibold rounded-lg text-sm hover:bg-gold-light transition">
               View Storefront
             </Link>
           </div>
@@ -137,7 +137,7 @@ export default function OwnerDashboard() {
 
         {loading ? (
           <div className="h-64 flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -164,7 +164,7 @@ export default function OwnerDashboard() {
               {/* AI Insights */}
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
                 <div className="p-5 border-b border-zinc-800 bg-zinc-900/50 flex items-center gap-2">
-                  <Sparkles size={18} className="text-amber-500" />
+                  <Sparkles size={18} className="text-gold" />
                   <h3 className="font-semibold text-lg">AI Business Insights</h3>
                 </div>
                 <div className="p-5 space-y-4">
@@ -173,7 +173,7 @@ export default function OwnerDashboard() {
                   ) : (
                     insights.map((insight, idx) => (
                       <div key={idx} className="flex gap-4 p-4 rounded-xl bg-zinc-950 border border-zinc-800">
-                        <div className={`mt-1 ${insight.type === 'positive' ? 'text-green-500' : insight.type === 'negative' ? 'text-red-500' : 'text-amber-500'}`}>
+                        <div className={`mt-1 ${insight.type === 'positive' ? 'text-green-500' : insight.type === 'negative' ? 'text-red-500' : 'text-gold'}`}>
                           {insight.type === 'positive' ? <TrendingUp size={20} /> : insight.type === 'negative' ? <TrendingDown size={20} /> : <Activity size={20} />}
                         </div>
                         <div>
@@ -189,15 +189,15 @@ export default function OwnerDashboard() {
               {/* Review Analysis */}
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
                 <div className="p-5 border-b border-zinc-800 bg-zinc-900/50 flex items-center gap-2">
-                  <Target size={18} className="text-amber-500" />
+                  <Target size={18} className="text-gold" />
                   <h3 className="font-semibold text-lg">AI Customer Sentiment Analysis</h3>
                 </div>
                 <div className="p-5">
                   <div className="flex flex-col md:flex-row gap-8 items-center mb-6">
                     <div className="relative w-32 h-32 flex items-center justify-center rounded-full border-8 border-zinc-800">
-                      <div className="absolute text-2xl font-bold text-amber-500">{reviewAnalysis?.positivePercentage || 0}%</div>
+                      <div className="absolute text-2xl font-bold text-gold">{reviewAnalysis?.positivePercentage || 0}%</div>
                       <svg className="absolute top-[-8px] left-[-8px] w-32 h-32 transform -rotate-90">
-                        <circle cx="64" cy="64" r="60" fill="none" stroke="currentColor" strokeWidth="8" className="text-amber-500" strokeDasharray="377" strokeDashoffset={377 - (377 * (reviewAnalysis?.positivePercentage || 0)) / 100} strokeLinecap="round" />
+                        <circle cx="64" cy="64" r="60" fill="none" stroke="currentColor" strokeWidth="8" className="text-gold" strokeDasharray="377" strokeDashoffset={377 - (377 * (reviewAnalysis?.positivePercentage || 0)) / 100} strokeLinecap="round" />
                       </svg>
                     </div>
                     <div className="flex-1 space-y-4 w-full">
@@ -214,7 +214,7 @@ export default function OwnerDashboard() {
                   <div className="space-y-3 mt-6 border-t border-zinc-800 pt-6">
                     <h4 className="text-sm font-medium text-zinc-300 mb-3">Key Customer Quotes</h4>
                     {(reviewAnalysis?.sampleQuotes || []).map((quote: string, i: number) => (
-                      <blockquote key={i} className="pl-4 border-l-2 border-amber-500 text-zinc-400 italic text-sm py-1">
+                      <blockquote key={i} className="pl-4 border-l-2 border-gold text-zinc-400 italic text-sm py-1">
                         "{quote}"
                       </blockquote>
                     ))}
@@ -227,14 +227,14 @@ export default function OwnerDashboard() {
             {/* Right Column: AI Assistant */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col h-[700px] lg:h-auto overflow-hidden">
               <div className="p-5 border-b border-zinc-800 bg-zinc-900/50 flex items-center gap-2">
-                <MessageSquare size={18} className="text-amber-500" />
+                <MessageSquare size={18} className="text-gold" />
                 <h3 className="font-semibold text-lg">AI Owner Assistant</h3>
               </div>
               
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {chatMessages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] rounded-2xl p-3 text-sm ${msg.role === 'user' ? 'bg-amber-500 text-zinc-950 rounded-br-none font-medium' : 'bg-zinc-950 border border-zinc-800 text-zinc-200 rounded-bl-none leading-relaxed'}`}>
+                    <div className={`max-w-[85%] rounded-2xl p-3 text-sm ${msg.role === 'user' ? 'bg-gold text-zinc-950 rounded-br-none font-medium' : 'bg-zinc-950 border border-zinc-800 text-zinc-200 rounded-bl-none leading-relaxed'}`}>
                       {msg.content}
                     </div>
                   </div>
@@ -259,12 +259,12 @@ export default function OwnerDashboard() {
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendChat()}
                     placeholder="Ask about sales, trends..."
-                    className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm rounded-full pl-4 pr-12 py-3 focus:outline-none focus:border-amber-500 transition-colors"
+                    className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm rounded-full pl-4 pr-12 py-3 focus:outline-none focus:border-gold transition-colors"
                   />
                   <button
                     onClick={sendChat}
                     disabled={!chatInput.trim() || chatTyping}
-                    className="absolute right-1.5 p-2 bg-amber-500 text-zinc-950 rounded-full disabled:opacity-50 hover:bg-amber-400 transition-colors"
+                    className="absolute right-1.5 p-2 bg-gold text-zinc-950 rounded-full disabled:opacity-50 hover:bg-gold-light transition-colors"
                   >
                     <Send size={16} />
                   </button>

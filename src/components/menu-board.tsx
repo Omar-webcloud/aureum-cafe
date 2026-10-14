@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/cart-context";
 import { formatUsd } from "@/lib/money";
 import type { MenuCategory, MenuItemDTO } from "@/lib/types";
@@ -15,55 +16,50 @@ const tabs: Array<{ id: "all" | MenuCategory; label: string }> = [
 ];
 
 export function FeaturedMenu({ items }: { items: MenuItemDTO[] }) {
-  const featured = items.filter((item) => item.featured);
+  const featured = items.filter((item) => item.featured).slice(0, 4);
   const { addItem } = useCart();
 
   return (
-    <section className="bg-ink px-5 py-20 text-foam sm:px-8">
+    <section className="bg-foam px-5 py-20 text-ink sm:px-8">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.32em] text-gold">The collection</p>
-            <h2 className="mt-3 max-w-xl font-display text-5xl leading-[0.95] sm:text-6xl">
-              Four pours we make without looking at the clock.
-            </h2>
-          </div>
-          <p className="max-w-sm text-sm leading-7 text-foam/65">
-            A tighter menu, roasted in small lots, pulled to the same recipe every morning. Add to your tray and send it
-            to the bar on WhatsApp.
-          </p>
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.32em] text-gold-deep">The collection</p>
+          <h2 className="mt-3 max-w-xl font-display text-5xl leading-[0.95] sm:text-6xl">
+            Four pours we make without looking at the clock.
+          </h2>
         </div>
-        <div className="mt-12 grid gap-5 md:grid-cols-2">
-          {featured.map((item, index) => (
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {featured.map((item) => (
             <article
               key={item.id}
-              className={`group relative overflow-hidden rounded-[28px] ${index === 0 ? "md:row-span-2 min-h-[460px]" : "min-h-[220px]"}`}
+              className="group flex h-full flex-col overflow-hidden rounded-xl bg-white text-ink shadow-[0_8px_28px_rgba(20,14,10,0.08)]"
             >
-              <Image
-                src={item.imageUrl}
-                alt={item.name}
-                fill
-                className="object-cover transition duration-700 group-hover:scale-105"
-                sizes="(min-width: 768px) 50vw, 100vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/20 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-6">
-                {item.tag ? (
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-gold">{item.tag}</p>
-                ) : null}
-                <div className="mt-2 flex items-end justify-between gap-4">
-                  <div>
-                    <h3 className="font-display text-3xl">{item.name}</h3>
-                    <p className="mt-1 max-w-sm text-sm leading-6 text-foam/70">{item.description}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => addItem(item)}
-                    className="shrink-0 rounded-full bg-gold px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-ink transition hover:bg-gold-light"
-                  >
-                    {formatUsd(item.priceCents)}
-                  </button>
-                </div>
+              <div className="relative h-56 overflow-hidden">
+                <Image
+                  src={item.imageUrl}
+                  alt={item.name}
+                  fill
+                  className="object-cover transition duration-700 group-hover:scale-105"
+                  sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+                />
+              </div>
+              <div className="flex flex-1 flex-col p-5">
+                <p className="min-h-4 text-[10px] uppercase tracking-[0.28em] text-gold-deep">
+                  {item.tag ?? "\u00a0"}
+                </p>
+                <h3 className="mt-2 min-h-14 line-clamp-2 font-display text-2xl leading-tight">{item.name}</h3>
+                <button
+                  type="button"
+                  onClick={() => addItem(item)}
+                  aria-label={`Add ${item.name} to tray for ${formatUsd(item.priceCents)}`}
+                  className="mt-auto flex h-11 w-full items-center justify-between rounded-full bg-ink px-4 text-[11px] font-medium uppercase tracking-[0.12em] text-foam transition hover:bg-gold-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+                >
+                  <span className="flex items-center gap-2">
+                    <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" />
+                    Add to tray
+                  </span>
+                  <span className="font-semibold tracking-[0.08em]">{formatUsd(item.priceCents)}</span>
+                </button>
               </div>
             </article>
           ))}

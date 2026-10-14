@@ -335,7 +335,7 @@ export function AiBaristaWidget() {
         aria-label="Open AI Barista"
         aria-expanded={isOpen}
         style={floatingPosition ? { left: floatingPosition.x, top: floatingPosition.y } : undefined}
-        className={`fixed z-40 flex h-14 touch-none items-center justify-center gap-2 rounded-full border border-amber-500/20 bg-zinc-900 text-amber-500 shadow-2xl transition-[width,padding,transform,opacity] duration-500 ease-out hover:scale-105 ${floatingPosition ? "cursor-grabbing" : "bottom-24 right-4 cursor-grab md:bottom-5 md:right-5"} sm:w-auto sm:px-4 ${isIntroExpanded ? "w-[148px] px-4" : "w-14 px-0"} ${isOpen ? "pointer-events-none translate-y-2 scale-90 opacity-0" : "translate-y-0 scale-100 opacity-100"}`}
+        className={`fixed z-40 flex h-14 touch-none items-center justify-center gap-2 rounded-full border border-gold/20 bg-zinc-900 text-gold shadow-2xl transition-[width,padding,transform,opacity] duration-500 ease-out hover:scale-105 ${floatingPosition ? "cursor-grabbing" : "bottom-24 right-4 cursor-grab md:bottom-5 md:right-5"} sm:w-auto sm:px-4 ${isIntroExpanded ? "w-[148px] px-4" : "w-14 px-0"} ${isOpen ? "pointer-events-none translate-y-2 scale-90 opacity-0" : "translate-y-0 scale-100 opacity-100"}`}
       >
         <Sparkles size={20} />
         <span className={`overflow-hidden whitespace-nowrap font-medium tracking-wide transition-[max-width,opacity] duration-300 ease-out sm:max-w-none sm:opacity-100 ${isIntroExpanded ? "max-w-[100px] opacity-100" : "max-w-0 opacity-0 sm:max-w-none sm:opacity-100"}`}>Ask AI Barista</span>
@@ -360,12 +360,12 @@ export function AiBaristaWidget() {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/30">
-                <Sparkles size={18} className="text-amber-500" />
+              <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30">
+                <Sparkles size={18} className="text-gold" />
               </div>
               <div>
                 <h3 className="text-zinc-100 font-semibold text-lg leading-tight">AI Barista</h3>
-                <p className="text-amber-500/80 text-xs font-medium tracking-wider uppercase">Full site access</p>
+                <p className="text-gold/80 text-xs font-medium tracking-wider uppercase">Full site access</p>
               </div>
             </div>
             <button type="button" onClick={() => setIsOpen(false)} aria-label="Close AI Barista" className="text-zinc-400 transition-colors hover:text-white">
@@ -380,7 +380,7 @@ export function AiBaristaWidget() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                  activeTab === tab ? "text-amber-500 border-b-2 border-amber-500" : "text-zinc-500 hover:text-zinc-300"
+                  activeTab === tab ? "text-gold border-b-2 border-gold" : "text-zinc-500 hover:text-zinc-300"
                 }`}
               >
                 {tab === "chat" ? "Chat & Q&A" : tab === "recommend" ? "Help Me Choose" : "Order"}
@@ -407,7 +407,7 @@ export function AiBaristaWidget() {
                         }
                         className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                           preferences.includes(pref)
-                            ? "bg-amber-500 text-zinc-950"
+                            ? "bg-gold text-zinc-950"
                             : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                         }`}
                       >
@@ -435,10 +435,10 @@ export function AiBaristaWidget() {
                             <p className="text-zinc-400 text-xs mt-1 line-clamp-2">{rec.explanation}</p>
                           </div>
                           <div className="flex items-center justify-between mt-2">
-                            <span className="text-amber-500 font-semibold text-sm">{formatUsd(rec.product.priceCents)}</span>
+                            <span className="text-gold font-semibold text-sm">{formatUsd(rec.product.priceCents)}</span>
                             <button
                               onClick={() => addItem(rec.product)}
-                              className="bg-amber-500 text-zinc-950 text-xs font-semibold px-3 py-1 rounded-full hover:bg-amber-400"
+                              className="bg-gold text-zinc-950 text-xs font-semibold px-3 py-1 rounded-full hover:bg-gold-light"
                             >
                               Add
                             </button>
@@ -495,7 +495,7 @@ export function AiBaristaWidget() {
                                 .finally(() => setIsTyping(false));
                             }, 0);
                           }}
-                          className="px-3 py-1.5 bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-full hover:border-amber-500/50 hover:text-amber-400 transition-all"
+                          className="px-3 py-1.5 bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-full hover:border-gold/50 hover:text-gold-light transition-all"
                         >
                           {qa.label}
                         </button>
@@ -506,8 +506,8 @@ export function AiBaristaWidget() {
 
                 {/* Order tab hint */}
                 {activeTab === "order" && messages.length === 1 && (
-                  <div className="bg-zinc-900/50 p-3 rounded-lg border border-amber-500/20 text-sm text-zinc-300">
-                    <strong className="text-amber-500">Hint:</strong> Type a natural order like:
+                  <div className="bg-zinc-900/50 p-3 rounded-lg border border-gold/20 text-sm text-zinc-300">
+                    <strong className="text-gold">Hint:</strong> Type a natural order like:
                     <br />
                     <em className="text-zinc-400">"I want 2 iced lattes with oat milk and a butter croissant."</em>
                   </div>
@@ -519,7 +519,7 @@ export function AiBaristaWidget() {
                     <div
                       className={`max-w-[85%] rounded-2xl p-3 text-sm whitespace-pre-wrap ${
                         msg.role === "user"
-                          ? "bg-amber-500 text-zinc-950 rounded-br-none font-medium"
+                          ? "bg-gold text-zinc-950 rounded-br-none font-medium"
                           : "bg-zinc-900 text-zinc-200 border border-zinc-800 rounded-bl-none leading-relaxed"
                       }`}
                     >
@@ -561,12 +561,12 @@ export function AiBaristaWidget() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={activeTab === "order" ? "Type your order…" : "Ask me anything about Aureum…"}
-                  className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm rounded-full pl-4 pr-12 py-3 focus:outline-none focus:border-amber-500 transition-colors placeholder:text-zinc-600"
+                  className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm rounded-full pl-4 pr-12 py-3 focus:outline-none focus:border-gold transition-colors placeholder:text-zinc-600"
                 />
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || isTyping}
-                  className="absolute right-1.5 p-2 bg-amber-500 text-zinc-950 rounded-full disabled:opacity-50 hover:bg-amber-400 transition-colors"
+                  className="absolute right-1.5 p-2 bg-gold text-zinc-950 rounded-full disabled:opacity-50 hover:bg-gold-light transition-colors"
                 >
                   <Send size={16} />
                 </button>
