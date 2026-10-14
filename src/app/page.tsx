@@ -1,5 +1,5 @@
 import { CartDrawer } from "@/components/cart-drawer";
-import { FeaturedMenu, FullMenu } from "@/components/menu-board";
+import { FullMenu } from "@/components/menu-board";
 import { Hero, OriginMarquee, Ritual, SiteFooter, Story, Testimonials, Visit } from "@/components/landing-sections";
 import { MobileDock } from "@/components/mobile-dock";
 import { SiteHeader } from "@/components/site-header";
@@ -19,7 +19,6 @@ export default async function HomePage() {
       <SiteHeader />
       <Hero />
       <OriginMarquee />
-      <FeaturedMenu items={items} />
       <Story />
       <FullMenu items={items} />
       <Ritual />

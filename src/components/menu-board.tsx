@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/cart-context";
 import { formatUsd } from "@/lib/money";
@@ -77,6 +77,28 @@ export function FullMenu({ items }: { items: MenuItemDTO[] }) {
     [active, items],
   );
 
+  useEffect(() => {
+    const handleSelectProduct = (e: Event) => {
+      const customEvent = e as CustomEvent<{ slug: string; category?: string }>;
+      const { slug } = customEvent.detail || {};
+      setActive("all");
+
+      setTimeout(() => {
+        const el = document.getElementById(`product-${slug}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("ring-2", "ring-gold", "ring-offset-4");
+          setTimeout(() => {
+            el.classList.remove("ring-2", "ring-gold", "ring-offset-4");
+          }, 2200);
+        }
+      }, 80);
+    };
+
+    window.addEventListener("select-product", handleSelectProduct);
+    return () => window.removeEventListener("select-product", handleSelectProduct);
+  }, []);
+
   return (
     <section id="menu" className="scroll-mt-24 bg-cream px-5 py-24 sm:px-8">
       <div className="mx-auto max-w-6xl">
@@ -104,7 +126,11 @@ export function FullMenu({ items }: { items: MenuItemDTO[] }) {
 
         <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {visible.map((item) => (
-            <article key={item.id} className="flex flex-col h-full overflow-hidden rounded-[28px] bg-white shadow-[0_18px_50px_rgba(20,14,10,0.06)]">
+            <article
+              key={item.id}
+              id={`product-${item.slug}`}
+              className="flex flex-col h-full overflow-hidden rounded-[28px] bg-white shadow-[0_18px_50px_rgba(20,14,10,0.06)] transition-all duration-500 scroll-mt-28"
+            >
               <div className="relative h-56 shrink-0">
                 <Image src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="400px" />
                 {item.tag ? (

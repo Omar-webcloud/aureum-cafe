@@ -2,57 +2,8 @@ import Image from "next/image";
 import { MessageCircle } from "lucide-react";
 import { shop } from "@/lib/shop";
 
-export function Hero() {
-  const orbitImages = [
-    "/images/espresso.png",
-    "/images/flatwhite.png",
-    "/images/latte.png",
-    "/images/mocha.png",
-    "/images/butter_croissant.jpg",
-    "/images/chocolate_morning_bun.jpg",
-  ];
+export { Hero } from "./hero-animated";
 
-  return (
-    <section id="top" className="relative isolate min-h-[100svh] overflow-hidden bg-[#fcfcfb] text-ink">
-      <div className="hero-artboard absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" aria-hidden="true">
-        {orbitImages.map((image) => (
-          <div key={image} className="hero-image">
-            <div className="hero-image-card">
-              <Image src={image} alt="" fill className="object-cover" sizes="(min-width: 640px) 14vw, 22vw" />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="relative z-10 flex min-h-[100svh] items-center justify-center px-4 pt-16 text-center">
-        <div className="flex flex-col items-center">
-          <div className="hero-wordmark-wrap">
-            <svg className="hero-wordmark-stroke" viewBox="0 0 900 220" fill="none" aria-hidden="true">
-              <path d="M36 166C230 118 439 91 858 104" stroke="#c4a36a" strokeWidth="9" strokeLinecap="round" />
-              <path d="M66 178C270 127 472 111 843 120" stroke="#d8b878" strokeWidth="4" strokeLinecap="round" />
-            </svg>
-            <h1 className="font-sans text-[clamp(4rem,12vw,11rem)] font-extrabold leading-[0.85] tracking-[-0.09em] text-ink">
-              {shop.wordmark}
-            </h1>
-          </div>
-          <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <a
-              href="#menu"
-              className="inline-flex h-11 items-center rounded-full bg-ink px-6 text-[10px] uppercase tracking-[0.22em] text-foam transition hover:bg-gold-deep sm:h-12 sm:px-7 sm:text-[11px]"
-            >
-              Explore the menu
-            </a>
-            <a
-              href="#visit"
-              className="inline-flex h-11 items-center rounded-full border border-ink/20 bg-white/90 px-6 text-[10px] uppercase tracking-[0.22em] text-ink transition hover:border-gold-deep hover:text-gold-deep sm:h-12 sm:px-7 sm:text-[11px]"
-            >
-              Order via WhatsApp
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 export function OriginMarquee() {
   const row = [...shop.origins, ...shop.origins];

@@ -14,6 +14,17 @@
   --color-mist: #d7cfc4;
 }
 
+/* Orbit card width — consumed by hero-animated.tsx via CSS var */
+:root {
+  --orbit-card-w: 160px;
+}
+@media (max-width: 1199px) {
+  :root { --orbit-card-w: 120px; }
+}
+@media (max-width: 779px) {
+  :root { --orbit-card-w: 86px; }
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -67,25 +78,19 @@ body {
   width: clamp(5rem, 10vw, 10rem);
   aspect-ratio: 1.35;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 10px;
   background: white;
   box-shadow:
-    0 5px 12px rgb(20 14 10 / 8%),
-    0 16px 32px rgb(20 14 10 / 10%);
+    0 4px 14px rgb(20 14 10 / 7%),
+    0 1px 4px rgb(20 14 10 / 5%);
   transform-style: preserve-3d;
-  animation: hero-image-float 6s ease-in-out infinite;
+  /* animation owned by GSAP — no CSS keyframe here */
   transition:
     box-shadow 300ms ease,
     scale 300ms ease;
 }
 
-.hero-image:hover .hero-image-card {
-  z-index: 5;
-  box-shadow:
-    0 8px 18px rgb(20 14 10 / 10%),
-    0 22px 42px rgb(20 14 10 / 14%);
-  scale: 1.12;
-}
+/* hover scale handled by GSAP in hero-animated.tsx */
 
 .hero-image:nth-child(1) {
   left: 50%;
