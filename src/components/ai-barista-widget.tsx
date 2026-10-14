@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { MessageSquare, X, Send, Sparkles, ExternalLink, ShoppingCart, MapPin, Navigation } from "lucide-react";
 import { useCart } from "./cart-context";
 import { formatUsd } from "@/lib/money";
@@ -335,9 +336,11 @@ export function AiBaristaWidget() {
         aria-label="Open AI Barista"
         aria-expanded={isOpen}
         style={floatingPosition ? { left: floatingPosition.x, top: floatingPosition.y } : undefined}
-        className={`fixed z-40 flex h-14 touch-none items-center justify-center gap-2 rounded-full border border-gold/20 bg-zinc-900 text-gold shadow-2xl transition-[width,padding,transform,opacity] duration-500 ease-out hover:scale-105 ${floatingPosition ? "cursor-grabbing" : "bottom-24 right-4 cursor-grab md:bottom-5 md:right-5"} sm:w-auto sm:px-4 ${isIntroExpanded ? "w-[148px] px-4" : "w-14 px-0"} ${isOpen ? "pointer-events-none translate-y-2 scale-90 opacity-0" : "translate-y-0 scale-100 opacity-100"}`}
+        className={`fixed z-40 flex h-14 touch-none items-center justify-center gap-2.5 rounded-full border border-gold/20 bg-zinc-900 text-gold shadow-2xl transition-[width,padding,transform,opacity] duration-500 ease-out hover:scale-105 ${floatingPosition ? "cursor-grabbing" : "bottom-24 right-4 cursor-grab md:bottom-5 md:right-5"} sm:w-auto sm:px-4 ${isIntroExpanded ? "w-[154px] px-4" : "w-14 px-0"} ${isOpen ? "pointer-events-none translate-y-2 scale-90 opacity-0" : "translate-y-0 scale-100 opacity-100"}`}
       >
-        <Sparkles size={20} />
+        <div className="relative h-6 w-6 shrink-0">
+          <Image src="/chatbot-icon.png" alt="AI Barista" fill className="object-contain" priority />
+        </div>
         <span className={`overflow-hidden whitespace-nowrap font-medium tracking-wide transition-[max-width,opacity] duration-300 ease-out sm:max-w-none sm:opacity-100 ${isIntroExpanded ? "max-w-[100px] opacity-100" : "max-w-0 opacity-0 sm:max-w-none sm:opacity-100"}`}>Ask AI Barista</span>
       </button>
 
@@ -360,8 +363,8 @@ export function AiBaristaWidget() {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30">
-                <Sparkles size={18} className="text-gold" />
+              <div className="relative w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30 p-1.5 shrink-0">
+                <Image src="/chatbot-icon.png" alt="AI Barista" width={28} height={28} className="object-contain" priority />
               </div>
               <div>
                 <h3 className="text-zinc-100 font-semibold text-lg leading-tight">AI Barista</h3>
@@ -515,29 +518,39 @@ export function AiBaristaWidget() {
 
                 {/* Messages */}
                 {messages.map((msg, index) => (
-                  <div key={index} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                    <div
-                      className={`max-w-[85%] rounded-2xl p-3 text-sm whitespace-pre-wrap ${
-                        msg.role === "user"
-                          ? "bg-gold text-zinc-950 rounded-br-none font-medium"
-                          : "bg-zinc-900 text-zinc-200 border border-zinc-800 rounded-bl-none leading-relaxed"
-                      }`}
-                    >
-                      {msg.content}
-                    </div>
-                    {/* Action chip */}
-                    {msg.chip && (
-                      <div className="mt-1.5 flex items-center gap-1.5 px-1">
-                        <span className="text-xs">{msg.chip.icon}</span>
-                        <span className="text-[11px] text-zinc-500 tracking-wide">{msg.chip.label}</span>
+                  <div key={index} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start items-end"}`}>
+                    {msg.role === "assistant" && (
+                      <div className="relative mb-1 h-6 w-6 shrink-0 rounded-full bg-gold/10 p-0.5 border border-gold/30 flex items-center justify-center">
+                        <Image src="/chatbot-icon.png" alt="AI Barista" width={18} height={18} className="object-contain" />
                       </div>
                     )}
+                    <div className="flex flex-col max-w-[85%]">
+                      <div
+                        className={`rounded-2xl p-3 text-sm whitespace-pre-wrap ${
+                          msg.role === "user"
+                            ? "bg-gold text-zinc-950 rounded-br-none font-medium ml-auto"
+                            : "bg-zinc-900 text-zinc-200 border border-zinc-800 rounded-bl-none leading-relaxed"
+                        }`}
+                      >
+                        {msg.content}
+                      </div>
+                      {/* Action chip */}
+                      {msg.chip && (
+                        <div className="mt-1.5 flex items-center gap-1.5 px-1">
+                          <span className="text-xs">{msg.chip.icon}</span>
+                          <span className="text-[11px] text-zinc-500 tracking-wide">{msg.chip.label}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
 
                 {/* Typing indicator */}
                 {isTyping && (
-                  <div className="flex justify-start">
+                  <div className="flex items-end gap-2 justify-start">
+                    <div className="relative mb-1 h-6 w-6 shrink-0 rounded-full bg-gold/10 p-0.5 border border-gold/30 flex items-center justify-center">
+                      <Image src="/chatbot-icon.png" alt="AI Barista" width={18} height={18} className="object-contain" />
+                    </div>
                     <div className="bg-zinc-900 text-zinc-200 border border-zinc-800 rounded-2xl rounded-bl-none p-3 px-4 flex gap-1">
                       <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
                       <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
